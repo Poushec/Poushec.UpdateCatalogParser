@@ -34,3 +34,10 @@ GetUpdateDetails(HttpClient client, string UpdateID)
 If you need to get more information about some update you've found from previous method - you need to use this function and pass it's `UpdateID` parameter to it. 
 It will return you object derived from `UpdateBase` class (ether `Update` or `Driver` classes) with all information available about it from details page or download page. 
 Like list of HardwareIDs if it is a driver or Supersedes if it is an Update. 
+
+## Limitations
+
+What this library does - is basicly parses HTML pages from catalog.update.microsoft.com, so it's derives it's limitations directry from it. 
+
+* It cannot return more than 1000 search results at once. 
+* It's speed depends on how fast your connection with catalog is. On my testing environment (1Gb/s internet connection) SendSearchQuery method running about 40 seconds.
