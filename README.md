@@ -8,7 +8,7 @@ Big thanks to ryan-jan (https://github.com/ryan-jan) and his MSCatalog poweshell
 
 ## How to use it
 
-Right now there is only tho functions available.
+Right now there is only two functions available.
 
 ``` C#
 SendSearchQuery(HttpClient client, string Query, bool ignoreDublicates = true)
@@ -34,6 +34,33 @@ GetUpdateDetails(HttpClient client, string UpdateID)
 If you need to get more information about some update you've found from previous method - you need to use this function and pass it's `UpdateID` parameter to it. 
 It will return you object derived from `UpdateBase` class (ether `Update` or `Driver` classes) with all information available about it from details page or download page. 
 Like list of HardwareIDs if it is a driver or Supersedes if it is an Update. 
+
+## Example Usage
+
+``` C#
+var rand = new Random();
+var client = new HttpClient();
+
+var testSearchResults = await CatalogClient.SendSearchQuery(client, "August 2021 Drivers", false);
+            
+Console.WriteLine($"{testSearchResults.Count} updates founded. Random update:\n");
+
+var randomUpdate = testSearchResults[rand.Next(0, testQuery.Count)];
+var testDetailedUpdate = await CatalogClient.GetUpdateDetails(client, randomUpdate.UpdateID) as Driver; //We're probably won't find anything but drivers by this query)
+
+Console.WriteLine($"{testDetailedUpdate.Title}\n\n{String.Join("\n", testDetailedUpdate.HardwareIDs)}");
+```
+
+Output: 
+
+```
+51 updates founded. Random update:
+
+Kyocera Mita Corporation - Printers - Kyocera EP 510DN KX
+
+USBPRINT\KYOCERAEP_510DNB229
+LPTENUM\KYOCERAEP_510DNB229
+```
 
 ## Limitations
 
