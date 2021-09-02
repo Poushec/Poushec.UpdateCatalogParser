@@ -2,6 +2,8 @@
 
 This library was made to help me or anyone else using it collect data from https://www.catalog.update.microsoft.com/ in comfortable and usable way.
 
+https://www.nuget.org/packages/UpdateCatalogLib This package on NuGet
+
 ## Credits
 
 Big thanks to ryan-jan (https://github.com/ryan-jan) and his MSCatalog poweshell module. At first I was trying to re-write this module as C# class library.)
