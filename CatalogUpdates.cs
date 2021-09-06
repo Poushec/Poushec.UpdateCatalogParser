@@ -11,6 +11,7 @@ namespace UpdateCatalog
         public List<string> SupersededBy { get; set; }
         public List<string> Supersedes { get; set; }
         
+        public Update() { }
         public Update(UpdateBase updateBase) : base(updateBase) {   }
 
         public bool CollectUpdateDetails()

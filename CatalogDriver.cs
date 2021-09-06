@@ -18,6 +18,7 @@ namespace UpdateCatalog
         public DateTime VersionDate { get; set; }
         public List<string> HardwareIDs { get; set; }
 
+        public Driver() { }
         public Driver(UpdateBase updateBase) : base(updateBase) {   }
 
         public bool CollectDriverDetails()
