@@ -8,7 +8,7 @@ namespace UpdateCatalog
         public string MSRCNumber { get; set; }
         public string MSRCSeverity { get; set; }
         public string KBArticleNumbers { get; set; }
-        public List<(string UpdateID, string Title)> SupersededBy { get; set; }
+        public List<string> SupersededBy { get; set; }
         public List<string> Supersedes { get; set; }
         
         public Update(UpdateBase updateBase) : base(updateBase) {   }
@@ -31,23 +31,27 @@ namespace UpdateCatalog
             }
         }
 
-        private List<(string, string)> CollectSupersededBy()
+        private List<string> CollectSupersededBy()
         {
             var supersededByDivs = _detailsPage.GetElementbyId("supersededbyInfo");
-            var supersededBy = new List<(string, string)>();
+            var supersededBy = new List<string>();
+
+            // If first child isn't a div - than it's just a n/a and there's nothing to gather
+            if (supersededByDivs.FirstChild.InnerText.Trim() == "n/a")
+            {
+                return supersededBy;
+            }
 
             supersededByDivs.ChildNodes
                 .Where(node => node.Name == "div")
                 .ToList()
                 .ForEach(node =>
                 {
-                    var link = node.ChildNodes[1]
+                    var updateId = node.ChildNodes[1]
                         .GetAttributeValue("href", "")
                         .Replace("ScopedViewInline.aspx?updateid=", "");
                     
-                    var text = node.ChildNodes[1].InnerText;
-
-                    supersededBy.Add(new (UpdateID = link, Title = text));
+                    supersededBy.Add(updateId);
                 });
 
             return supersededBy;
@@ -57,6 +61,12 @@ namespace UpdateCatalog
         {
             var supersedesDivs = _detailsPage.GetElementbyId("supersedesInfo");
             var supersedes = new List<string>();
+
+            // If first child isn't a div - than it's just a n/a and there's nothing to gather
+            if (supersedesDivs.FirstChild.InnerText.Trim() == "n/a")
+            {
+                return supersedes;
+            }
             
             supersedesDivs.ChildNodes
                 .Where(node => node.Name == "div")
