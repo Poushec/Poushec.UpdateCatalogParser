@@ -27,8 +27,8 @@ namespace UpdateCatalog
         public string Description { get; set; }
         public List<string> Architectures { get; set; }
         public List<string> SupportedLanguages { get; set; }
-        public string MoreInformation { get; set; }
-        public string SupportUrl { get; set; } 
+        public IEnumerable<string> MoreInformation { get; set; }
+        public IEnumerable<string> SupportUrl { get; set; } 
         public string RestartBehavior { get; set; }
         public string MayRequestUserInput { get; set; }
         public string MustBeInstalledExclusively { get; set; }
@@ -216,35 +216,12 @@ namespace UpdateCatalog
                     {
                         SupportedLanguages.Add(lang.Trim());
                     });
-                
-                //Hope this won't change - LOL
 
-                var moreInfoDiv = _detailsPage.GetElementbyId("moreInfoDiv");
-
-                //When it's n/a
-                if (moreInfoDiv.ChildNodes.Count == 3)
-                {
-                    this.MoreInformation = moreInfoDiv.LastChild.InnerText.Trim();
-                }
-                else
-                {
-                    this.MoreInformation = moreInfoDiv
-                        .ChildNodes[3]
-                        .ChildNodes[1]
-                        .InnerText.Trim();
-                }
-
-                this.SupportUrl = _detailsPage.GetElementbyId("suportUrlDiv")
-                    .LastChild
-                    .InnerText.Trim();
-
-                if (this.SupportUrl == "")
-                {
-                    this.SupportUrl =_detailsPage.GetElementbyId("suportUrlDiv")
-                        .ChildNodes[3]
-                        .ChildNodes[1]
-                        .InnerText.Trim();
-                }
+                var urlRegex = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)");
+                var moreInfoDiv = _detailsPage.GetElementbyId("moreInfoDiv").InnerHtml;
+                this.MoreInformation = urlRegex.Matches(moreInfoDiv).Select(match => match.Value).ToHashSet();
+                var supportUrlDiv = _detailsPage.GetElementbyId("suportUrlDiv").InnerHtml;
+                this.SupportUrl = urlRegex.Matches(supportUrlDiv).Select(match => match.Value).ToHashSet();
 
                 this.RestartBehavior = _detailsPage.GetElementbyId("ScopedViewHandler_rebootBehavior").InnerText;
 

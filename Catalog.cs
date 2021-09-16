@@ -5,6 +5,7 @@ using System.Net.Http;
 using HtmlAgilityPack;
 using System.Linq;
 using UpdateCatalog.Exceptions;
+using static System.Web.HttpUtility; 
 
 namespace UpdateCatalog
 {
@@ -27,7 +28,7 @@ namespace UpdateCatalog
         public static async Task<List<CatalogResultRow>> SendSearchQuery(HttpClient client, string Query, bool ignoreDublicates = true)
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
-            string Uri = String.Format($"{catalogBaseUrl}?q={Query}"); 
+            string Uri = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
             
             CatalogResponce responce = null;
             
