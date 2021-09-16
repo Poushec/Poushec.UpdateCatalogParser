@@ -13,4 +13,16 @@ namespace UpdateCatalog.Exceptions
         public UnableToCollectUpdateDetailsException() : base() { }
         public UnableToCollectUpdateDetailsException(string message) : base(message) { }
     }
+
+    public class RequestToCatalogTimedOutException : Exception
+    {
+        public RequestToCatalogTimedOutException() : base() { }
+        public RequestToCatalogTimedOutException(string message) : base(message) { }
+    }
+
+    public class ParseHtmlPageException : Exception 
+    {
+        public ParseHtmlPageException() : base() { }
+        public ParseHtmlPageException(string message) : base(message) { }
+    }
 }

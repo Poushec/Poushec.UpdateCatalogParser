@@ -116,20 +116,12 @@ namespace UpdateCatalog
         public static async Task<UpdateBase> GetUpdateDetails(HttpClient client, string UpdateID)
         {
             var updateBase = new UpdateBase() { UpdateID = UpdateID };
-
-            if (!(await updateBase.CollectGenericInfo(client)))
-            {
-                throw new UnableToCollectUpdateDetailsException("Most likely UpdateID parameter is incorrect");
-            }
+            await updateBase.CollectGenericInfo(client);
 
             if (updateBase.Classification.Contains("Driver"))
             {
                 var driverUpdate = new Driver(updateBase);
-                
-                if (!driverUpdate.CollectDriverDetails())
-                {
-                    throw new UnableToCollectUpdateDetailsException("Error collecting driver details");
-                }
+                driverUpdate.CollectDriverDetails();
 
                 return driverUpdate;
             }
@@ -144,7 +136,7 @@ namespace UpdateCatalog
                 case "Update Rollups":
                 case "Updates": 
                     var update = new Update(updateBase);
-                    if (!update.CollectUpdateDetails()) { throw new UnableToCollectUpdateDetailsException("Error collection update details"); }
+                    update.CollectUpdateDetails();
                     return update;
 
                 default: throw new NotImplementedException();

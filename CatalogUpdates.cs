@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UpdateCatalog.Exceptions;
 
 namespace UpdateCatalog
 {
@@ -14,7 +15,7 @@ namespace UpdateCatalog
         public Update() { }
         public Update(UpdateBase updateBase) : base(updateBase) {   }
 
-        public bool CollectUpdateDetails()
+        public void CollectUpdateDetails()
         {
             try
             {
@@ -23,12 +24,10 @@ namespace UpdateCatalog
                 this.KBArticleNumbers = _detailsPage.GetElementbyId("kbDiv").LastChild.InnerText.Trim();
                 this.SupersededBy = CollectSupersededBy();
                 this.Supersedes = CollectSupersedes();
-                
-                return true;
             }
             catch 
             {
-                return false;
+                throw new ParseHtmlPageException("Failed to gather Update details");
             }
         }
 

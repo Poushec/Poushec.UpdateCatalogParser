@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using UpdateCatalog.Exceptions;
 
 namespace UpdateCatalog
 {
@@ -21,7 +22,7 @@ namespace UpdateCatalog
         public Driver() { }
         public Driver(UpdateBase updateBase) : base(updateBase) {   }
 
-        public bool CollectDriverDetails()
+        public void CollectDriverDetails()
         {
             try
             {
@@ -36,10 +37,8 @@ namespace UpdateCatalog
             }
             catch 
             {
-                return false;
+                throw new ParseHtmlPageException("Failed to gather Driver details");
             }
-            
-            return true;
         }
 
         private protected List<string> GetHardwareIDs()

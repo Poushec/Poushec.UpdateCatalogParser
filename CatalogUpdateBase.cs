@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using UpdateCatalog.Exceptions;
 
 namespace UpdateCatalog
 {
@@ -107,9 +108,9 @@ namespace UpdateCatalog
             {
                 responceDialog = await client.PostAsync(ReqiestUri, requestContent);
             }
-            catch
+            catch (TaskCanceledException)
             {
-                return false;
+                throw new RequestToCatalogTimedOutException();
             }
 
             if (!responceDialog.IsSuccessStatusCode) 
@@ -143,7 +144,7 @@ namespace UpdateCatalog
             }
             catch (TaskCanceledException)
             {
-                return false;
+                throw new RequestToCatalogTimedOutException("Catalog has not responded");
             }
 
             if (!response.IsSuccessStatusCode)
