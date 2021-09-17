@@ -106,6 +106,19 @@ namespace UpdateCatalog
                 }
             }
         }
+        
+        public static async Task<(bool Success, UpdateBase update)> TryGetUpdateDetails(HttpClient client, string UpdateID)
+        {
+            try
+            {
+                var update = await GetUpdateDetails(client, UpdateID);
+                return (true, update);
+            }
+            catch
+            {
+                return (false, null);
+            }
+        }
 
         /// <summary>
         /// Collect update details from Updates Details Page and it's download links 
@@ -113,6 +126,11 @@ namespace UpdateCatalog
         /// <param name="client">Running System.Net.Http.HttpClient</param>
         /// <param name="UpdateID">Update's UpdateID</param>
         /// <returns>Ether Driver of Update object derived from UpdateBase class with all collected details</returns>
+        /// <exception cref="UnableToCollectUpdateDetailsException">Thrown when catalog responce with an error page or when request was unsuccessfull</exception>
+        /// <exception cref="UpdateWasNotFoundException">Thrown when catalog responce with an error page with error code 8DDD0024 (Not found)</exception>
+        /// <exception cref="CatalogErrorException">Thrown when catalog responce with an error page with unknown error code</exception>
+        /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
+        /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
         public static async Task<UpdateBase> GetUpdateDetails(HttpClient client, string UpdateID)
         {
             var updateBase = new UpdateBase() { UpdateID = UpdateID };

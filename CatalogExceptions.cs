@@ -2,6 +2,11 @@ using System;
 
 namespace UpdateCatalog.Exceptions
 {
+    public class CatalogErrorException : Exception
+    {
+        public CatalogErrorException() : base() { }
+        public CatalogErrorException(string message) : base(message) { }
+    }
     public class CatalogNoResultsException : Exception
     {
         public CatalogNoResultsException() : base() { }
@@ -24,5 +29,11 @@ namespace UpdateCatalog.Exceptions
     {
         public ParseHtmlPageException() : base() { }
         public ParseHtmlPageException(string message) : base(message) { }
+    }
+
+    public class UpdateWasNotFoundException : Exception
+    {
+        public UpdateWasNotFoundException() : base() { }
+        public UpdateWasNotFoundException(string message) : base(message) { }
     }
 }
