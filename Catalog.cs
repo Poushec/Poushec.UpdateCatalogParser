@@ -153,6 +153,7 @@ namespace UpdateCatalog
                 case "Service Packs":
                 case "Update Rollups":
                 case "Updates": 
+                case "Hotfix":
                     var update = new Update(updateBase);
                     update.CollectUpdateDetails();
                     return update;

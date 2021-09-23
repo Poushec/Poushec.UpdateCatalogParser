@@ -268,7 +268,6 @@ namespace UpdateCatalog
                     .InnerText.Trim();
             }
                 
-
             this.UnistallSteps = _detailsPage.GetElementbyId("uninstallStepsDiv")
                 .LastChild
                 .InnerText.Trim();
