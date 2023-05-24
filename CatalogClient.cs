@@ -4,39 +4,53 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using HtmlAgilityPack;
 using System.Linq;
-using UpdateCatalog.Exceptions;
-using static System.Web.HttpUtility; 
+using Poushec.UpdateCatalog.Models;
+using Poushec.UpdateCatalog.Exceptions;
+using static System.Web.HttpUtility;
 
-namespace UpdateCatalog
+namespace Poushec.UpdateCatalog
 {
     /// <summary>
-    /// Static class that handles all communications with catalog.update.microsoft.com
+    /// Class that handles all communications with catalog.update.microsoft.com
     /// </summary>
-    public static class CatalogClient
+    public class CatalogClient
     {
+        private HttpClient _client;
+
+        public CatalogClient()
+        {
+            _client = new HttpClient();
+        }
+
+        
+        public CatalogClient(HttpClient client)
+        {
+            _client = client;
+        }
+        
+
         /// <summary>
         /// Sends search query to catalog.update.microsoft.com
         /// </summary>
-        /// <param name="client">Running System.Net.Http.HttpClient</param>
         /// <param name="Query">Search Query</param>
-        /// <param name="ignoreDublicates">
+        /// <param name="ignoreDuplicates">
         /// TRUE - founded updates that have the same Title and SizeInBytes
         /// fields as any of already founded updates will be ignored.
         /// FALSE - collects every founded update.
         /// </param>
         /// <returns>List of objects derived from UpdateBase class (Update or Driver)</returns>
-        public static async Task<List<CatalogResultRow>> SendSearchQuery(HttpClient client, string Query, bool ignoreDublicates = true)
+        public async Task<List<CatalogResultRow>> SendSearchQuery(string Query, bool ignoreDuplicates = true)
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
             string Uri = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
             
-            CatalogResponce responce = null;
+            CatalogResponse response = null;
             
-            while (responce == null)
+            while (response == null)
             {
                 try
                 {
-                    responce = await InvokeCatalogRequest(client, Uri, HttpMethod.Get);
+                    response = await InvokeCatalogRequest(Uri, HttpMethod.Get);
                 }
                 catch (TaskCanceledException)
                 {
@@ -50,47 +64,46 @@ namespace UpdateCatalog
             
             var searchResults = new List<CatalogResultRow>();
 
-            ParseSearchResults(responce, ignoreDublicates, ref searchResults);
+            ParseSearchResults(response, ignoreDuplicates, ref searchResults);
 
-            while (responce.NextPage != null)
+            while (response.NextPage != null)
             {
                 try
                 {
-                    var tempResponce = await InvokeCatalogRequest(
-                        client,
+                    var tempResponse = await InvokeCatalogRequest(
                         Uri: Uri,
                         method: HttpMethod.Post,
-                        EventArgument: responce.EventArgument,
+                        EventArgument: response.EventArgument,
                         EventTarget: "ctl00$catalogBody$nextPageLinkText",
-                        EventValidation: responce.EventValidation,
-                        ViewState: responce.ViewState,
-                        ViewStateGenerator: responce.ViewStateGenerator
+                        EventValidation: response.EventValidation,
+                        ViewState: response.ViewState,
+                        ViewStateGenerator: response.ViewStateGenerator
                     );
 
-                    responce = tempResponce;
+                    response = tempResponse;
                 }
                 catch (TaskCanceledException)
                 {
                     continue;
                 }
 
-                ParseSearchResults(responce, ignoreDublicates, ref searchResults);
+                ParseSearchResults(response, ignoreDuplicates, ref searchResults);
             }
 
             return searchResults;
         }
 
-        private static void ParseSearchResults(CatalogResponce responcePage, bool ignoreDublicates, ref List<CatalogResultRow> existingUpdates)
+        private void ParseSearchResults(CatalogResponse responsePage, bool ignoreDuplicates, ref List<CatalogResultRow> existingUpdates)
         {
-            foreach (var row in responcePage.Rows)
+            foreach (var row in responsePage.Rows)
             {
                 if (row.Id != "headerRow")
                 {
                     var Cells = row.SelectNodes("td");
 
-                    if (ignoreDublicates)
+                    if (ignoreDuplicates)
                     {
-                        //If updates collection already contains element with same SizeInBytes & same Title - skip it (assuming it is a dublicate)
+                        //If updates collection already contains element with same SizeInBytes & same Title - skip it (assuming it is a duplicate)
                         if (existingUpdates
                             .Where(upd => upd.SizeInBytes.ToString() == Cells[6].SelectNodes("span")[1].InnerHtml 
                             && upd.Title == Cells[1].InnerText.Trim()).Count() == 0
@@ -107,11 +120,11 @@ namespace UpdateCatalog
             }
         }
         
-        public static async Task<(bool Success, UpdateBase update)> TryGetUpdateDetails(HttpClient client, string UpdateID)
+        public async Task<(bool Success, UpdateBase update)> TryGetUpdateDetails(string UpdateID)
         {
             try
             {
-                var update = await GetUpdateDetails(client, UpdateID);
+                var update = await GetUpdateDetails(UpdateID);
                 return (true, update);
             }
             catch
@@ -123,18 +136,17 @@ namespace UpdateCatalog
         /// <summary>
         /// Collect update details from Updates Details Page and it's download links 
         /// </summary>
-        /// <param name="client">Running System.Net.Http.HttpClient</param>
         /// <param name="UpdateID">Update's UpdateID</param>
         /// <returns>Ether Driver of Update object derived from UpdateBase class with all collected details</returns>
-        /// <exception cref="UnableToCollectUpdateDetailsException">Thrown when catalog responce with an error page or when request was unsuccessfull</exception>
-        /// <exception cref="UpdateWasNotFoundException">Thrown when catalog responce with an error page with error code 8DDD0024 (Not found)</exception>
-        /// <exception cref="CatalogErrorException">Thrown when catalog responce with an error page with unknown error code</exception>
+        /// <exception cref="UnableToCollectUpdateDetailsException">Thrown when catalog response with an error page or when request was unsuccessful</exception>
+        /// <exception cref="UpdateWasNotFoundException">Thrown when catalog response with an error page with error code 8DDD0024 (Not found)</exception>
+        /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
         /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
         /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
-        public static async Task<UpdateBase> GetUpdateDetails(HttpClient client, string UpdateID)
+        public async Task<UpdateBase> GetUpdateDetails(string UpdateID)
         {
             var updateBase = new UpdateBase() { UpdateID = UpdateID };
-            await updateBase.CollectGenericInfo(client);
+            await updateBase.CollectGenericInfo(_client);
 
             if (updateBase.Classification.Contains("Driver"))
             {
@@ -162,8 +174,7 @@ namespace UpdateCatalog
             }
         }
 
-        private static async Task<CatalogResponce> InvokeCatalogRequest(
-            HttpClient client,
+        private async Task<CatalogResponse> InvokeCatalogRequest(
             string Uri,
             HttpMethod method,
             string EventArgument = "",
@@ -174,7 +185,7 @@ namespace UpdateCatalog
         )
         {
             var formData = new Dictionary<string, string>();
-            HttpResponseMessage rawResponce = null;
+            HttpResponseMessage rawResponse = null;
 
             if (method == HttpMethod.Post)
             {
@@ -186,19 +197,19 @@ namespace UpdateCatalog
 
                 var formContent = new FormUrlEncodedContent(formData);
 
-                rawResponce = await client.PostAsync(Uri, formContent);
+                rawResponse = await _client.PostAsync(Uri, formContent);
             }
             else
             {
-                rawResponce = await client.SendAsync(new HttpRequestMessage() { RequestUri = new Uri(Uri) });
+                rawResponse = await _client.SendAsync(new HttpRequestMessage() { RequestUri = new Uri(Uri) });
             }
             
             var HtmlDoc = new HtmlDocument();
-            HtmlDoc.Load(await rawResponce.Content.ReadAsStreamAsync());
+            HtmlDoc.Load(await rawResponse.Content.ReadAsStreamAsync());
 
             if (HtmlDoc.GetElementbyId("ctl00_catalogBody_noResultText") == null)
             {
-                return new CatalogResponce(HtmlDoc);
+                return new CatalogResponse(HtmlDoc);
             }
 
             throw new CatalogNoResultsException();

@@ -6,9 +6,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using UpdateCatalog.Exceptions;
+using Poushec.UpdateCatalog.Exceptions;
 
-namespace UpdateCatalog
+namespace Poushec.UpdateCatalog.Models
 {
     /// <summary>
     /// Class represents content of Update Details page
@@ -36,7 +36,7 @@ namespace UpdateCatalog
         public string MustBeInstalledExclusively { get; set; }
         public string RequiresNetworkConnectivity { get; set; }
         public string UninstallNotes { get; set; }
-        public string UnistallSteps { get; set; }
+        public string UninstallSteps { get; set; }
 
         public UpdateBase() { }
 
@@ -72,7 +72,7 @@ namespace UpdateCatalog
             this.MustBeInstalledExclusively = updateBase.MustBeInstalledExclusively;
             this.RequiresNetworkConnectivity = updateBase.RequiresNetworkConnectivity;
             this.UninstallNotes = updateBase.UninstallNotes;
-            this.UnistallSteps = updateBase.UnistallSteps;
+            this.UninstallSteps = updateBase.UninstallSteps;
         }
 
         internal async Task CollectGenericInfo(HttpClient client)
@@ -89,35 +89,37 @@ namespace UpdateCatalog
         /// <returns>TRUE if links was founded, FALSE if not</returns>
         protected async Task _CollectDownloadLinks(HttpClient client)
         {
-            var ReqiestUri = "https://www.catalog.update.microsoft.com/DownloadDialog.aspx";
+            var RequestUri = "https://www.catalog.update.microsoft.com/DownloadDialog.aspx";
             
-            var regex = new Regex(@"(http[s]?\://dl\.delivery\.mp\.microsoft\.com\/[^\'\""]*)|(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)");
-            
-            var post = JsonSerializer.Serialize(new {size = 0, updateId = UpdateID, uidInfo = UpdateID});
-            var body = $"[{post}]";
-            var requestBody = new Dictionary<string, string>();
-            requestBody.Add("updateIDs", body);
+            var regex = new Regex(@"(http[s]?\://dl\.delivery\.mp\.microsoft\.com\/[^\'\""]*)|(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)|(http[s]://catalog\.s\.download\.windowsupdate\.com.*?(?=\'))");
 
-            var requestContent = new FormUrlEncodedContent(requestBody);
-            var responceDialog = new HttpResponseMessage();
+            var request = new HttpRequestMessage(HttpMethod.Post, RequestUri);
+
+            var post = JsonSerializer.Serialize(new {size = 0, languages = "", uidInfo = UpdateID, updateId = UpdateID});
+            var body = $"[{post}]";
+
+            var requestContent = new MultipartFormDataContent();
+            requestContent.Add(new StringContent(body), "updateIds");
+
+            request.Content = requestContent;
+
+            var responseDialog = new HttpResponseMessage();
 
             try
             {
-                responceDialog = await client.PostAsync(ReqiestUri, requestContent);
+                responseDialog = await client.SendAsync(request);
             }
             catch (TaskCanceledException)
             {
                 throw new RequestToCatalogTimedOutException();
             }
 
-            if (!responceDialog.IsSuccessStatusCode) 
+            if (!responseDialog.IsSuccessStatusCode) 
             { 
-                throw new UnableToCollectUpdateDetailsException($"Catalog responded with {responceDialog.StatusCode} code");
+                throw new UnableToCollectUpdateDetailsException($"Catalog responded with {responseDialog.StatusCode} code");
             }
 
-            string links = await responceDialog.Content.ReadAsStringAsync();
-
-            links = links.Replace("www.download.windowsupdate", "download.windowsupdate");
+            string links = await responseDialog.Content.ReadAsStringAsync();
             var regexMatches = regex.Matches(links);
 
             if (regexMatches.Count == 0)
@@ -130,12 +132,12 @@ namespace UpdateCatalog
 
         protected async Task _GetDetailsPage(HttpClient client)
         {
-            var ReqiestUri = $"https://www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid={this.UpdateID}";
+            var RequestUri = $"https://www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid={this.UpdateID}";
             var response = new HttpResponseMessage();
 
             try
             {
-                response = await client.SendAsync(new HttpRequestMessage() { RequestUri = new Uri(ReqiestUri) } );
+                response = await client.SendAsync(new HttpRequestMessage() { RequestUri = new Uri(RequestUri) } );
             }
             catch (TaskCanceledException)
             {
@@ -268,7 +270,7 @@ namespace UpdateCatalog
                     .InnerText.Trim();
             }
                 
-            this.UnistallSteps = _detailsPage.GetElementbyId("uninstallStepsDiv")
+            this.UninstallSteps = _detailsPage.GetElementbyId("uninstallStepsDiv")
                 .LastChild
                 .InnerText.Trim();
         }

@@ -1,7 +1,7 @@
 using HtmlAgilityPack;
 using System;
 
-namespace UpdateCatalog
+namespace Poushec.UpdateCatalog.Models
 {
     public class CatalogResultRow
     {

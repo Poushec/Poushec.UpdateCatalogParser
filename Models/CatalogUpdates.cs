@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using UpdateCatalog.Exceptions;
 
-namespace UpdateCatalog
+namespace Poushec.UpdateCatalog.Models
 {
     public class Update : UpdateBase
     {

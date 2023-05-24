@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using HtmlAgilityPack;
-using UpdateCatalog.Exceptions;
 
-namespace UpdateCatalog
+namespace Poushec.UpdateCatalog.Models
 {
     public class Driver : UpdateBase
     {

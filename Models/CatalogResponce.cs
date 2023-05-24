@@ -1,9 +1,9 @@
 using HtmlAgilityPack;
 using System.Linq;
 
-namespace UpdateCatalog
+namespace Poushec.UpdateCatalog.Models
 {
-    internal class CatalogResponce
+    internal class CatalogResponse
     {
         public HtmlNodeCollection Rows;
         public string EventArgument;
@@ -12,8 +12,8 @@ namespace UpdateCatalog
         public string ViewStateGenerator;
         public HtmlNode NextPage; 
 
-        public CatalogResponce() {  }
-        public CatalogResponce(HtmlDocument doc)
+        public CatalogResponse() {  }
+        public CatalogResponse(HtmlDocument doc)
         {
             var Table = doc.GetElementbyId("ctl00_catalogBody_updateMatches");
             Rows = Table.SelectNodes("tr");
