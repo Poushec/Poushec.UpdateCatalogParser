@@ -37,6 +37,9 @@ It will get you an object derived from `UpdateBase` class (ether `Update` or `Dr
 ## Example Usage
 
 ``` C#
+using Poushec.UpdateCatalog;
+using Poushec.UpdateCatalog.Models;
+
 var rand = new Random();
 var client = new HttpClient();
 
