@@ -22,13 +22,11 @@ namespace Poushec.UpdateCatalog
             _client = new HttpClient();
         }
 
-        
         public CatalogClient(HttpClient client)
         {
             _client = client;
         }
         
-
         /// <summary>
         /// Sends search query to catalog.update.microsoft.com
         /// </summary>
@@ -39,7 +37,7 @@ namespace Poushec.UpdateCatalog
         /// FALSE - collects every founded update.
         /// </param>
         /// <returns>List of objects derived from UpdateBase class (Update or Driver)</returns>
-        public async Task<List<CatalogResultRow>> SendSearchQuery(string Query, bool ignoreDuplicates = true)
+        public async Task<List<CatalogResultRow>> SendSearchQueryAsync(string Query, bool ignoreDuplicates = true)
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
             string Uri = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
@@ -50,7 +48,7 @@ namespace Poushec.UpdateCatalog
             {
                 try
                 {
-                    response = await InvokeCatalogRequest(Uri, HttpMethod.Get);
+                    response = await InvokeCatalogRequestAsync(Uri, HttpMethod.Get);
                 }
                 catch (TaskCanceledException)
                 {
@@ -70,7 +68,7 @@ namespace Poushec.UpdateCatalog
             {
                 try
                 {
-                    var tempResponse = await InvokeCatalogRequest(
+                    var tempResponse = await InvokeCatalogRequestAsync(
                         Uri: Uri,
                         method: HttpMethod.Post,
                         EventArgument: response.EventArgument,
@@ -120,11 +118,11 @@ namespace Poushec.UpdateCatalog
             }
         }
         
-        public async Task<(bool Success, UpdateBase update)> TryGetUpdateDetails(string UpdateID)
+        public async Task<(bool Success, UpdateBase update)> TryGetUpdateDetailsAsync(string UpdateID)
         {
             try
             {
-                var update = await GetUpdateDetails(UpdateID);
+                var update = await GetUpdateDetailsAsync(UpdateID);
                 return (true, update);
             }
             catch
@@ -143,7 +141,7 @@ namespace Poushec.UpdateCatalog
         /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
         /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
         /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
-        public async Task<UpdateBase> GetUpdateDetails(string UpdateID)
+        public async Task<UpdateBase> GetUpdateDetailsAsync(string UpdateID)
         {
             var updateBase = new UpdateBase() { UpdateID = UpdateID };
             await updateBase.CollectGenericInfo(_client);
@@ -174,7 +172,7 @@ namespace Poushec.UpdateCatalog
             }
         }
 
-        private async Task<CatalogResponse> InvokeCatalogRequest(
+        private async Task<CatalogResponse> InvokeCatalogRequestAsync(
             string Uri,
             HttpMethod method,
             string EventArgument = "",
