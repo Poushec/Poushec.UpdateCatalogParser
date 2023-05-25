@@ -15,16 +15,19 @@ namespace Poushec.UpdateCatalog
     /// </summary>
     public class CatalogClient
     {
+        private byte _pageReloadAttempts;
         private HttpClient _client;
 
-        public CatalogClient()
+        public CatalogClient(byte pageReloadAttemptsAllowed = 3)
         {
             _client = new HttpClient();
+            _pageReloadAttempts = pageReloadAttemptsAllowed;
         }
 
-        public CatalogClient(HttpClient client)
+        public CatalogClient(HttpClient client, byte pageReloadAttemptsAllowed = 3)
         {
             _client = client;
+            _pageReloadAttempts = pageReloadAttemptsAllowed;
         }
         
         /// <summary>
@@ -43,34 +46,66 @@ namespace Poushec.UpdateCatalog
             string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
             
             CatalogResponse? lastCatalogResponse = null;
+            byte pageReloadAttemptsLeft = _pageReloadAttempts;
             
             while (lastCatalogResponse is null)
             {
+                if (pageReloadAttemptsLeft == 0)
+                {
+                    throw new CatalogErrorException($"Search results page was not successfully loaded after {_pageReloadAttempts} attempts to refresh it");
+                }
+
                 try
                 {
                     lastCatalogResponse = await _sendSearchQueryAsync(searchQueryUrl);
                 }
                 catch (TaskCanceledException)
                 {
+                    // Request timed out - it happens. We'll try to reload a page
+                    pageReloadAttemptsLeft--;
+                    continue;
+                }
+                catch (CatalogFailedToLoadSearchResultsPageException)
+                {
+                    // Sometimes catalog responses with an empty search results table.
+                    // Refreshing a page usually helps, so that's what we'll try to do
+                    pageReloadAttemptsLeft--;
                     continue;
                 }
                 catch (CatalogNoResultsException)
                 {
+                    // Search query returned no results
                     return new List<CatalogSearchResult>();
                 }
             }
             
             List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
+            pageReloadAttemptsLeft = _pageReloadAttempts;
 
             while (lastCatalogResponse.NextPage != null)
             {
+                if (pageReloadAttemptsLeft == 0)
+                {
+                    throw new CatalogErrorException($"One of the search result pages was not successfully loaded after {_pageReloadAttempts} attempts to refresh it");
+                }
+
                 try
                 {
                     lastCatalogResponse = await _loadNextPageResults(searchQueryUrl, lastCatalogResponse);
                     searchResults.AddRange(lastCatalogResponse.SearchResults);
+                    pageReloadAttemptsLeft = _pageReloadAttempts; // Reset page refresh attempts count
                 }
-                catch (TaskCanceledException) // Request timed out - it happens
+                catch (TaskCanceledException) 
                 {
+                    // Request timed out - it happens
+                    pageReloadAttemptsLeft--;
+                    continue;
+                }
+                catch (CatalogFailedToLoadSearchResultsPageException)
+                {
+                    // Sometimes catalog responses with an empty search results table.
+                    // Refreshing a page usually helps, so that's what we'll try to do
+                    pageReloadAttemptsLeft--;
                     continue;
                 }
             }
