@@ -22,7 +22,7 @@ namespace Poushec.UpdateCatalog.Models
         public string UpdateID { get; set; }
         public List<string> Products { get; set; }
         public string Classification { get; set; }
-        public DateTime LastUpdated { get; set; }
+        public DateOnly LastUpdated { get; set; }
         public string Size { get; set; }
         public int SizeInBytes { get; set; }
         public List<string> DownloadLinks { get; set; }
@@ -40,7 +40,7 @@ namespace Poushec.UpdateCatalog.Models
 
         public UpdateBase() { }
 
-        internal UpdateBase(CatalogResultRow resultRow) 
+        internal UpdateBase(CatalogSearchResult resultRow) 
         {
             this.UpdateID = resultRow.UpdateID;
             this.Title = resultRow.Title;
@@ -195,7 +195,7 @@ namespace Poushec.UpdateCatalog.Models
                 .LastChild
                 .InnerText.Trim();
             
-            this.LastUpdated = DateTime.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_date").InnerText);
+            this.LastUpdated = DateOnly.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_date").InnerText);
 
             this.Size = _detailsPage.GetElementbyId("ScopedViewHandler_size").InnerText;
 

@@ -37,18 +37,18 @@ namespace Poushec.UpdateCatalog
         /// FALSE - collects every founded update.
         /// </param>
         /// <returns>List of objects derived from UpdateBase class (Update or Driver)</returns>
-        public async Task<List<CatalogResultRow>> SendSearchQueryAsync(string Query, bool ignoreDuplicates = true)
+        public async Task<List<CatalogSearchResult>> SendSearchQueryAsync(string Query, bool ignoreDuplicates = true)
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
-            string Uri = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
+            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
             
-            CatalogResponse response = null;
+            CatalogResponse? lastCatalogResponse = null;
             
-            while (response == null)
+            while (lastCatalogResponse is null)
             {
                 try
                 {
-                    response = await InvokeCatalogRequestAsync(Uri, HttpMethod.Get);
+                    lastCatalogResponse = await _sendSearchQueryAsync(searchQueryUrl);
                 }
                 catch (TaskCanceledException)
                 {
@@ -56,83 +56,48 @@ namespace Poushec.UpdateCatalog
                 }
                 catch (CatalogNoResultsException)
                 {
-                    return new List<CatalogResultRow>();
+                    return new List<CatalogSearchResult>();
                 }
             }
             
-            var searchResults = new List<CatalogResultRow>();
+            List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
 
-            ParseSearchResults(response, ignoreDuplicates, ref searchResults);
-
-            while (response.NextPage != null)
+            while (lastCatalogResponse.NextPage != null)
             {
                 try
                 {
-                    var tempResponse = await InvokeCatalogRequestAsync(
-                        Uri: Uri,
-                        method: HttpMethod.Post,
-                        EventArgument: response.EventArgument,
-                        EventTarget: "ctl00$catalogBody$nextPageLinkText",
-                        EventValidation: response.EventValidation,
-                        ViewState: response.ViewState,
-                        ViewStateGenerator: response.ViewStateGenerator
-                    );
-
-                    response = tempResponse;
+                    lastCatalogResponse = await _loadNextPageResults(searchQueryUrl, lastCatalogResponse);
+                    searchResults.AddRange(lastCatalogResponse.SearchResults);
                 }
-                catch (TaskCanceledException)
+                catch (TaskCanceledException) // Request timed out - it happens
                 {
                     continue;
                 }
-
-                ParseSearchResults(response, ignoreDuplicates, ref searchResults);
             }
 
             return searchResults;
         }
-
-        private void ParseSearchResults(CatalogResponse responsePage, bool ignoreDuplicates, ref List<CatalogResultRow> existingUpdates)
-        {
-            foreach (var row in responsePage.Rows)
-            {
-                if (row.Id != "headerRow")
-                {
-                    var Cells = row.SelectNodes("td");
-
-                    if (ignoreDuplicates)
-                    {
-                        //If updates collection already contains element with same SizeInBytes & same Title - skip it (assuming it is a duplicate)
-                        if (existingUpdates
-                            .Where(upd => upd.SizeInBytes.ToString() == Cells[6].SelectNodes("span")[1].InnerHtml 
-                            && upd.Title == Cells[1].InnerText.Trim()).Count() == 0
-                        )
-                        {
-                            existingUpdates.Add(new CatalogResultRow(row));
-                        }
-                    }
-                    else
-                    {
-                        existingUpdates.Add(new CatalogResultRow(row));
-                    }
-                }
-            }
-        }
         
-        public async Task<(bool Success, UpdateBase update)> TryGetUpdateDetailsAsync(string UpdateID)
+        /// <summary>
+        /// Attempts to collect update details from Update Details Page and Download Page 
+        /// </summary>
+        /// <param name="UpdateID">Update's UpdateID</param>
+        /// <returns>Null is request was unsuccessful or UpdateBase (Driver/Update) object with all collected details</returns>
+        public async Task<UpdateBase?> TryGetUpdateDetailsAsync(string UpdateID)
         {
             try
             {
                 var update = await GetUpdateDetailsAsync(UpdateID);
-                return (true, update);
+                return update;
             }
             catch
             {
-                return (false, null);
+                return null;
             }
         }
 
         /// <summary>
-        /// Collect update details from Updates Details Page and it's download links 
+        /// Collect update details from Update Details Page and Download Page 
         /// </summary>
         /// <param name="UpdateID">Update's UpdateID</param>
         /// <returns>Ether Driver of Update object derived from UpdateBase class with all collected details</returns>
@@ -172,45 +137,42 @@ namespace Poushec.UpdateCatalog
             }
         }
 
-        private async Task<CatalogResponse> InvokeCatalogRequestAsync(
-            string Uri,
-            HttpMethod method,
-            string EventArgument = "",
-            string EventTarget = "",
-            string EventValidation = "",
-            string ViewState = "",
-            string ViewStateGenerator = "" 
-        )
+        private async Task<CatalogResponse> _sendSearchQueryAsync(string requestUri)
         {
-            var formData = new Dictionary<string, string>();
-            HttpResponseMessage rawResponse = null;
-
-            if (method == HttpMethod.Post)
-            {
-                formData.Add("__EVENTTARGET", EventTarget);
-                formData.Add("__EVENTARGUMENT", EventArgument);
-                formData.Add("__VIEWSTATE", ViewState);
-                formData.Add("__VIEWSTATEGENERATOR", ViewStateGenerator);
-                formData.Add("__EVENTVALIDATION", EventValidation);
-
-                var formContent = new FormUrlEncodedContent(formData);
-
-                rawResponse = await _client.PostAsync(Uri, formContent);
-            }
-            else
-            {
-                rawResponse = await _client.SendAsync(new HttpRequestMessage() { RequestUri = new Uri(Uri) });
-            }
+            HttpResponseMessage response = await _client.GetAsync(requestUri);
+            response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
-            HtmlDoc.Load(await rawResponse.Content.ReadAsStreamAsync());
+            HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            if (HtmlDoc.GetElementbyId("ctl00_catalogBody_noResultText") == null)
+            if (HtmlDoc.GetElementbyId("ctl00_catalogBody_noResultText") is not null)
             {
-                return new CatalogResponse(HtmlDoc);
+                throw new CatalogNoResultsException();
             }
 
-            throw new CatalogNoResultsException();
+            return CatalogResponse.ParseFromHtmlPage(HtmlDoc);
+        }
+
+        private async Task<CatalogResponse> _loadNextPageResults(string requestUri, CatalogResponse previousResponse)
+        {
+            var formData = new Dictionary<string, string>() 
+            {
+                { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
+                { "__EVENTARGUMENT",        previousResponse.EventArgument },
+                { "__VIEWSTATE",            previousResponse.ViewState },
+                { "__VIEWSTATEGENERATOR",   previousResponse.ViewStateGenerator },
+                { "__EVENTVALIDATION",      previousResponse.EventValidation }
+            };
+
+            var requestContent = new FormUrlEncodedContent(formData); 
+
+            HttpResponseMessage response = await _client.PostAsync(requestUri, requestContent);
+            response.EnsureSuccessStatusCode();
+            
+            var HtmlDoc = new HtmlDocument();
+            HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
+
+            return CatalogResponse.ParseFromHtmlPage(HtmlDoc);
         }
     }
 }
