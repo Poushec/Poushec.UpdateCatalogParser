@@ -6,6 +6,10 @@ This library was made to help me or anyone else to collect data from https://www
 
 Big thanks to ryan-jan (https://github.com/ryan-jan) for his MSCatalog PowerShell module. My original plan was to re-write this module as C# class library.)
 
+## Links 
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/2/25/NuGet_project_logo.svg" alt= “” width="16" height="16"> [This package on NuGet](https://www.nuget.org/packages/UpdateCatalogLib/)
+
 ## Other implementations
 
 - **Java**: [zaladhaval/UpdateCatalogParseLib](https://github.com/zaladhaval/UpdateCatalogParseLib)
