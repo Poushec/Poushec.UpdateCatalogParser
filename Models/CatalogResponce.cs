@@ -41,12 +41,13 @@ namespace Poushec.UpdateCatalog.Models
             HtmlNode nextPage = htmlDoc.GetElementbyId("ctl00_catalogBody_nextPageLinkText");
 
             HtmlNode table = htmlDoc.GetElementbyId("ctl00_catalogBody_updateMatches");
-            HtmlNodeCollection searchResultsRows = table.SelectNodes("tr");
 
-            if (searchResultsRows is null)
+            if (table is null)
             {
                 throw new CatalogFailedToLoadSearchResultsPageException("Catalog response does not contains a search results table");
             }
+
+            HtmlNodeCollection searchResultsRows = table.SelectNodes("tr");
 
             List<CatalogSearchResult> searchResults = new();
 

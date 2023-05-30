@@ -6,39 +6,51 @@ namespace Poushec.UpdateCatalog.Models
 {
     public class Driver : UpdateBase
     {
-        public string Company { get; set; }
-        public string DriverManufacturer { get; set; }
-        public string DriverClass { get; set; }
-        public string DriverModel { get; set; }
-        public string DriverProvider { get; set; }
-        public string DriverVersion { get; set; }
-        public DateTime VersionDate { get; set; }
-        public List<string> HardwareIDs { get; set; }
+        public string Company { get; set; } = String.Empty;
+        public string DriverManufacturer { get; set; } = String.Empty;
+        public string DriverClass { get; set; } = String.Empty;
+        public string DriverModel { get; set; } = String.Empty;
+        public string DriverProvider { get; set; } = String.Empty;
+        public string DriverVersion { get; set; } = String.Empty;
+        public DateOnly VersionDate { get; set; } = DateOnly.MinValue;
+        public List<string> HardwareIDs { get; set; } = new();
 
-        public Driver() { }
-        public Driver(UpdateBase updateBase) : base(updateBase) {   }
-
-        public void CollectDriverDetails()
+        public Driver(UpdateBase updateBase) : base(updateBase) 
         {
+            _parseDriverDetails();
+        }
+
+        private void _parseDriverDetails()
+        {
+            if (_detailsPage is null)
+            {
+                throw new ParseHtmlPageException("Failed to parse update details. _details page is null");
+            }
+
             try
             {
-                this.HardwareIDs = GetHardwareIDs();
+                this.HardwareIDs = _parseHardwareIDs();
                 this.Company = _detailsPage.GetElementbyId("ScopedViewHandler_company").InnerText;
                 this.DriverManufacturer = _detailsPage.GetElementbyId("ScopedViewHandler_manufacturer").InnerText;
                 this.DriverClass = _detailsPage.GetElementbyId("ScopedViewHandler_driverClass").InnerText;
                 this.DriverModel = _detailsPage.GetElementbyId("ScopedViewHandler_driverModel").InnerText;
                 this.DriverProvider = _detailsPage.GetElementbyId("ScopedViewHandler_driverProvider").InnerText;
                 this.DriverVersion = _detailsPage.GetElementbyId("ScopedViewHandler_version").InnerText;
-                this.VersionDate = DateTime.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
+                this.VersionDate = DateOnly.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
             }
-            catch 
+            catch
             {
-                throw new ParseHtmlPageException("Failed to gather Driver details");
+                throw new ParseHtmlPageException("Failed to parse Driver details");
             }
         }
 
-        private protected List<string> GetHardwareIDs()
+        private List<string> _parseHardwareIDs()
         {
+            if (_detailsPage is null)
+            {
+                throw new ParseHtmlPageException("Failed to parse update details. _details page is null");
+            }
+
             var hwIdsDivs = _detailsPage.GetElementbyId("driverhwIDs");
 
             if (hwIdsDivs == null)
@@ -59,7 +71,7 @@ namespace Poushec.UpdateCatalog.Models
                         .Replace(@"\r\n", "")
                         .ToUpper();
                     
-                    if (hid != "")
+                    if (!String.IsNullOrEmpty(hid))
                     {
                         hwIds.Add(hid);
                     }

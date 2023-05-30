@@ -118,11 +118,11 @@ namespace Poushec.UpdateCatalog
         /// </summary>
         /// <param name="UpdateID">Update's UpdateID</param>
         /// <returns>Null is request was unsuccessful or UpdateBase (Driver/Update) object with all collected details</returns>
-        public async Task<UpdateBase?> TryGetUpdateDetailsAsync(string UpdateID)
+        public async Task<UpdateBase?> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
             try
             {
-                var update = await GetUpdateDetailsAsync(UpdateID);
+                var update = await GetUpdateDetailsAsync(searchResult);
                 return update;
             }
             catch
@@ -141,15 +141,14 @@ namespace Poushec.UpdateCatalog
         /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
         /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
         /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
-        public async Task<UpdateBase> GetUpdateDetailsAsync(string UpdateID)
+        public async Task<UpdateBase> GetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
-            var updateBase = new UpdateBase() { UpdateID = UpdateID };
-            await updateBase.CollectGenericInfo(_client);
+            var updateBase = new UpdateBase(searchResult);
+            await updateBase.ParseCommonDetails(_client);
 
             if (updateBase.Classification.Contains("Driver"))
             {
                 var driverUpdate = new Driver(updateBase);
-                driverUpdate.CollectDriverDetails();
 
                 return driverUpdate;
             }
@@ -165,7 +164,6 @@ namespace Poushec.UpdateCatalog
                 case "Updates": 
                 case "Hotfix":
                     var update = new Update(updateBase);
-                    update.CollectUpdateDetails();
                     return update;
 
                 default: throw new NotImplementedException();
