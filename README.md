@@ -1,6 +1,6 @@
 # UpdateCatalogLib
 
-This library was made to help me or anyone else to collect data from https://www.catalog.update.microsoft.com/ in comfortable way.
+This library was made to help me or anyone else to collect data from https://www.catalog.update.microsoft.com/ in a comfortable way.
 
 ## Credits
 
