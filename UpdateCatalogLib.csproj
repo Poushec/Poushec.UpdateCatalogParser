@@ -6,10 +6,20 @@
     <Version>2.0.0</Version>
     <Authors>Poushec</Authors>
     <Nullable>enable</Nullable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>microsoft-update-catalog</PackageTags>
+    <PackageProjectUrl>https://github.com/Poushec/UpdateCatalogLib</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Poushec/UpdateCatalogLib</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>
+      Little library developed to parse catalog.update.microsoft.com search results
+    </Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
+    <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>
