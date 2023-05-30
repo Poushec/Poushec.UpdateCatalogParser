@@ -8,7 +8,7 @@ Big thanks to ryan-jan (https://github.com/ryan-jan) for his MSCatalog PowerShel
 
 ## Links 
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/2/25/NuGet_project_logo.svg" alt= “” width="16" height="16"> [This package on NuGet](https://www.nuget.org/packages/UpdateCatalogLib/)
+<img src="https://upload.wikimedia.org/wikipedia/commons/2/25/NuGet_project_logo.svg" alt= “” width="16" height="16"> [This package on NuGet](https://www.nuget.org/packages/Poushec.UpdateCatalogParser/)
 
 ## Other implementations
 
