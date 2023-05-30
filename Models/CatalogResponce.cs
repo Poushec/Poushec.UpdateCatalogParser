@@ -1,10 +1,10 @@
 using HtmlAgilityPack;
-using Poushec.UpdateCatalog.Exceptions;
+using Poushec.UpdateCatalogParser.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Poushec.UpdateCatalog.Models
+namespace Poushec.UpdateCatalogParser.Models
 {
     internal class CatalogResponse
     {

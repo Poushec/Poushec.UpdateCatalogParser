@@ -1,4 +1,4 @@
-namespace Poushec.UpdateCatalog.Exceptions;
+namespace Poushec.UpdateCatalogParser.Exceptions;
 
 public class UpdateWasNotFoundException : System.Exception
 {

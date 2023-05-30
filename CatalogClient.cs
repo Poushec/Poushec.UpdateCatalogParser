@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using HtmlAgilityPack;
 using System.Linq;
-using Poushec.UpdateCatalog.Models;
-using Poushec.UpdateCatalog.Exceptions;
+using Poushec.UpdateCatalogParser.Models;
+using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
 
-namespace Poushec.UpdateCatalog
+namespace Poushec.UpdateCatalogParser
 {
     /// <summary>
     /// Class that handles all communications with catalog.update.microsoft.com

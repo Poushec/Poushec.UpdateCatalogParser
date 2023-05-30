@@ -6,9 +6,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using Poushec.UpdateCatalog.Exceptions;
+using Poushec.UpdateCatalogParser.Exceptions;
 
-namespace Poushec.UpdateCatalog.Models
+namespace Poushec.UpdateCatalogParser.Models
 {
     /// <summary>
     /// Class represents the shared content of Update Details page of any Update type (classification)

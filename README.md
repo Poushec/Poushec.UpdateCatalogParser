@@ -1,4 +1,4 @@
-# UpdateCatalogLib
+# Update Catalog Parser
 
 This library was made to help me or anyone else to collect data from https://www.catalog.update.microsoft.com/ in a comfortable way.
 
@@ -47,8 +47,8 @@ It will get you an object derived from `UpdateBase` class (ether `Update` or `Dr
 ## Example Usage
 
 ``` C#
-using Poushec.UpdateCatalog;
-using Poushec.UpdateCatalog.Models;
+using Poushec.UpdateCatalogParser;
+using Poushec.UpdateCatalogParser.Models;
 
 var rand = new Random();
 var client = new HttpClient();

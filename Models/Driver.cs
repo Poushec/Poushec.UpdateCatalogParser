@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Poushec.UpdateCatalog.Exceptions;
+using Poushec.UpdateCatalogParser.Exceptions;
 
-namespace Poushec.UpdateCatalog.Models
+namespace Poushec.UpdateCatalogParser.Models
 {
     public class Driver : UpdateBase
     {

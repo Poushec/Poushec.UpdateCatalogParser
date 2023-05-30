@@ -1,7 +1,7 @@
 using HtmlAgilityPack;
 using System;
 
-namespace Poushec.UpdateCatalog.Models
+namespace Poushec.UpdateCatalogParser.Models
 {
     public class CatalogSearchResult
     {
