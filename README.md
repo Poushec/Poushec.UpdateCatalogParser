@@ -70,4 +70,4 @@ LPTENUM\KYOCERAEP_510DNB229
 
 ## Limitations
 
-What this library does - is parse HTML pages from catalog.update.microsoft.com, so it's derives it's limitations directly from it. For example, it cannot return more than 1000 search results from a single query.
+What this library does - is parse HTML pages from catalog.update.microsoft.com, so it derives it's limitations directly from it. For example, it cannot return more than 1000 search results from a single query.
