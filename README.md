@@ -1,18 +1,18 @@
 # UpdateCatalogLib
 
-This library was made to help me or anyone else using it collect data from https://www.catalog.update.microsoft.com/ in comfortable and usable way.
+This library was made to help me or anyone else to collect data from https://www.catalog.update.microsoft.com/ in comfortable way.
 
 ## Credits
 
-Big thanks to ryan-jan (https://github.com/ryan-jan) and his MSCatalog PowerShell module. My original plan was to re-write this module as C# class library.)
+Big thanks to ryan-jan (https://github.com/ryan-jan) for his MSCatalog PowerShell module. My original plan was to re-write this module as C# class library.)
 
 ## How to use it
 
 ``` C#
-CatalogClient catalogClient = new CatalogClient(new HttpClient());
-List<CatalogResultRow> searchResults = await catalogClient.SendSearchQueryAsync("SQL Server 2019", ignoreDuplicates = true);
+CatalogClient catalogClient = new CatalogClient(new HttpClient(), pageReloadAttemptsAllowed = 3);
+List<CatalogSearchResult> searchResults = await catalogClient.SendSearchQueryAsync("SQL Server 2019", ignoreDuplicates = true);
 ```
-This method will return you collection of CatalogResultRow objects. Each of this objects represent search result from catalog.update.microsoft.com with data available through
+This method will return you collection of CatalogSearchResult objects. Each of this objects represent search result from catalog.update.microsoft.com with data available through
 search results page only: 
 
 1. Update's ID
@@ -24,12 +24,14 @@ search results page only:
 7. Size
 8. Size in bytes
 
-If `ignoreDuplicates` parameter is TRUE than function will return only updates with unique `Title` and `SizeInBytes` fields. 
+Use the `pageReloadAttemptsAllowed` optional parameter to set the number of page refresh attempts allowed. Catalog can be unreliable at times and you almost certain to get at least one invalid page from it when working with a lot of search results. Default value: 3 
 
-To get more info on a particular update (which you would normally get by following the link on the results list) use this method: 
+If `ignoreDuplicates` optional parameter is TRUE than function will return only updates with unique `Title` and `SizeInBytes` fields. Default: TRUE
+
+To get more info on a particular update (which you would normally get by following the link on the results list) pass one of the CatalogSearchResult objects you've got from SendSearchQueryAsync to this method: 
 
 ``` C#
-UpdateBase updateDetails = await catalogClient.GetUpdateDetailsAsync(string UpdateID)
+UpdateBase updateDetails = await catalogClient.GetUpdateDetailsAsync(CatalogSearchResult searchResult)
 ```
 
 It will get you an object derived from `UpdateBase` class (ether `Update` or `Driver`) with all information available about it from details and download pages, for example download links, HardwareIDs if it is a driver, Supersedes list if it is an Update etc. 
@@ -49,8 +51,8 @@ var testSearchResults = await catalogClient.SendSearchQueryAsync("August 2021 Dr
             
 Console.WriteLine($"{testSearchResults.Count} updates founded. Random update:\n");
 
-var randomUpdate = testSearchResults[rand.Next(0, testQuery.Count)];
-var testDetailedUpdate = await catalogClient.GetUpdateDetailsAsync(client, randomUpdate.UpdateID) as Driver; //We're probably won't find anything but drivers by this query)
+var randomSearchResult = testSearchResults[rand.Next(0, testQuery.Count)];
+var testDetailedUpdate = await catalogClient.GetUpdateDetailsAsync(client, randomSearchResult) as Driver; //We're probably won't find anything but drivers by this query)
 
 Console.WriteLine($"{testDetailedUpdate.Title}\n\n{String.Join("\n", testDetailedUpdate.HardwareIDs)}");
 ```

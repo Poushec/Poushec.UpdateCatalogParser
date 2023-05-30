@@ -116,7 +116,7 @@ namespace Poushec.UpdateCatalog
         /// <summary>
         /// Attempts to collect update details from Update Details Page and Download Page 
         /// </summary>
-        /// <param name="UpdateID">Update's UpdateID</param>
+        /// <param name="searchResult">CatalogSearchResult from search query</param>
         /// <returns>Null is request was unsuccessful or UpdateBase (Driver/Update) object with all collected details</returns>
         public async Task<UpdateBase?> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
@@ -134,9 +134,9 @@ namespace Poushec.UpdateCatalog
         /// <summary>
         /// Collect update details from Update Details Page and Download Page 
         /// </summary>
-        /// <param name="UpdateID">Update's UpdateID</param>
+        /// <param name="searchResult">CatalogSearchResult from search query</param>
         /// <returns>Ether Driver of Update object derived from UpdateBase class with all collected details</returns>
-        /// <exception cref="UnableToCollectUpdateDetailsException">Thrown when catalog response with an error page or when request was unsuccessful</exception>
+        /// <exception cref="UnableToCollectUpdateDetailsException">Thrown when catalog response with an error page or request was unsuccessful</exception>
         /// <exception cref="UpdateWasNotFoundException">Thrown when catalog response with an error page with error code 8DDD0024 (Not found)</exception>
         /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
         /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
@@ -144,7 +144,27 @@ namespace Poushec.UpdateCatalog
         public async Task<UpdateBase> GetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
             var updateBase = new UpdateBase(searchResult);
-            await updateBase.ParseCommonDetails(_client);
+
+            byte pageReloadAttemptsLeft = _pageReloadAttempts;
+
+            while (true)
+            {
+                try 
+                {
+                    await updateBase.ParseCommonDetails(_client);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    pageReloadAttemptsLeft--;
+
+                    if (pageReloadAttemptsLeft == 0)
+                    {
+                        throw new UnableToCollectUpdateDetailsException($"Failed to properly parse update details page after {_pageReloadAttempts} attempts", ex);
+                    }
+                }
+                
+            }
 
             if (updateBase.Classification.Contains("Driver"))
             {
