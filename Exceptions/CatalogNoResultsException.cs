@@ -1,4 +1,4 @@
-namespace Poushec.UpdateCatalog;
+namespace Poushec.UpdateCatalog.Exceptions;
 
 public class CatalogNoResultsException : System.Exception
 {
