@@ -6,6 +6,10 @@ This library was made to help me or anyone else to collect data from https://www
 
 Big thanks to ryan-jan (https://github.com/ryan-jan) for his MSCatalog PowerShell module. My original plan was to re-write this module as C# class library.)
 
+## Other implementations
+
+- **Java**: [zaladhaval/UpdateCatalogParseLib](https://github.com/zaladhaval/UpdateCatalogParseLib)
+
 ## How to use it
 
 ``` C#
