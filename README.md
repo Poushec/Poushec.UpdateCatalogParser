@@ -9,7 +9,7 @@ Big thanks to ryan-jan (https://github.com/ryan-jan) and his MSCatalog PowerShel
 ## How to use it
 
 ``` C#
-CatalogClient catalogClient = new CatalogClient(client);
+CatalogClient catalogClient = new CatalogClient(new HttpClient());
 List<CatalogResultRow> searchResults = await catalogClient.SendSearchQueryAsync("SQL Server 2019", ignoreDuplicates = true);
 ```
 This method will return you collection of CatalogResultRow objects. Each of this objects represent search result from catalog.update.microsoft.com with data available through
@@ -37,6 +37,9 @@ It will get you an object derived from `UpdateBase` class (ether `Update` or `Dr
 ## Example Usage
 
 ``` C#
+using Poushec.UpdateCatalog;
+using Poushec.UpdateCatalog.Models;
+
 var rand = new Random();
 var client = new HttpClient();
 
