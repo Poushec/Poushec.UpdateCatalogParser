@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Poushec.UpdateCatalog.Exceptions;
 
 namespace Poushec.UpdateCatalog.Models
 {
@@ -38,9 +39,9 @@ namespace Poushec.UpdateCatalog.Models
                 this.DriverVersion = _detailsPage.GetElementbyId("ScopedViewHandler_version").InnerText;
                 this.VersionDate = DateOnly.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
             }
-            catch
+            catch (Exception ex)
             {
-                throw new ParseHtmlPageException("Failed to parse Driver details");
+                throw new ParseHtmlPageException("Failed to parse Driver details", ex);
             }
         }
 

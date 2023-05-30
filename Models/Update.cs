@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Poushec.UpdateCatalog.Exceptions;
 
 namespace Poushec.UpdateCatalog.Models
 {
@@ -32,9 +33,9 @@ namespace Poushec.UpdateCatalog.Models
                 this.SupersededBy = _parseSupersededByList();
                 this.Supersedes = _parseSupersedesList();
             }
-            catch 
+            catch (Exception ex)
             {
-                throw new ParseHtmlPageException("Failed to parse Update details");
+                throw new ParseHtmlPageException("Failed to parse Update details", ex);
             }
         }
 

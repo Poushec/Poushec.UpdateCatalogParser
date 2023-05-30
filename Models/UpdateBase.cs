@@ -215,9 +215,9 @@ namespace Poushec.UpdateCatalog.Models
             {
                 response = await client.SendAsync(new HttpRequestMessage() { RequestUri = new Uri(RequestUri) } );
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException ex)
             {
-                throw new RequestToCatalogTimedOutException("Catalog was not responded");
+                throw new RequestToCatalogTimedOutException("Catalog was not responded", ex);
             }
 
             if (!response.IsSuccessStatusCode)
