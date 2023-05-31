@@ -64,34 +64,65 @@ It will get you an object derived from `UpdateBase` class (ether `Update` or `Dr
 
 ## Example Usage
 
+**Get all available results from a search query**:
+
 ``` C#
 using Poushec.UpdateCatalogParser;
-using Poushec.UpdateCatalogParser.Models;
 
-var rand = new Random();
 var client = new HttpClient();
-
 var catalogClient = new CatalogClient(client);
 
-var testSearchResults = await catalogClient.SendSearchQueryAsync("August 2021 Drivers", false);
+var testSearchResults = await catalogClient.SendSearchQueryAsync("SQL Server 2022");
             
-Console.WriteLine($"{testSearchResults.Count} updates founded. Random update:\n");
+Console.WriteLine($"{testSearchResults.Count} updates found\n");
 
-var randomSearchResult = testSearchResults[rand.Next(0, testQuery.Count)];
-var testDetailedUpdate = await catalogClient.GetUpdateDetailsAsync(client, randomSearchResult) as Driver; //We're probably won't find anything but drivers by this query)
-
-Console.WriteLine($"{testDetailedUpdate.Title}\n\n{String.Join("\n", testDetailedUpdate.HardwareIDs)}");
+testSearchResults.ForEach(result => Console.WriteLine($"{result.Title} ({result.LastUpdated.ToString("yyyy/MM/dd")})"));
 ```
 
 Output: 
 
 ```
-51 updates founded. Random update:
+5 updates found
 
-Kyocera Mita Corporation - Printers - Kyocera EP 510DN KX
+SQL Server 2022 RTM Cumulative Update (CU) 4 KB5026717 (2023/05/11)
+SQL Server 2022 RTM Cumulative Update (CU) 3 KB5024396 (2023/04/13)
+SQL Server 2022 RTM Cumulative Update (CU) 2 KB5023127 (2023/03/23)
+SQL Server 2022 RTM Cumulative Update (CU) 1 KB5022375 (2023/03/10)
+Security Update for SQL Server 2022 RTM GDR (KB5021522) (2023/03/05)
+```
 
-USBPRINT\KYOCERAEP_510DNB229
-LPTENUM\KYOCERAEP_510DNB229
+**Get the first results page and iterate through next**:
+
+``` C#
+using Poushec.UpdateCatalogParser;
+
+var client = new HttpClient();
+var catalogClient = new CatalogClient(client);
+
+var currentResultsPage = await catalogClient.GetFirstPageFromSearchQueryAsync("SQL Server 2016");
+var allSearchResults = currentResultsPage.SearchResults;
+
+Console.WriteLine($"{currentResultsPage.ResultsCount} updates found\n");
+Console.WriteLine($"Results on current page: {currentResultsPage.SearchResults.Count}");
+
+while (!currentResultsPage.FinalPage)
+{
+    currentResultsPage = await currentResultsPage.ParseNextPageAsync();
+    allSearchResults.AddRange(currentResultsPage.SearchResults);
+
+    Console.WriteLine($"Results on current page: {currentResultsPage.SearchResults.Count}");
+}
+```
+
+Output: 
+
+```
+79 updates found
+
+Results on current page: 25
+Results on current page: 25
+Results on current page: 25
+Results on current page: 4
 ```
 
 ## Limitations
