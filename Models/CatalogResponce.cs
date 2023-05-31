@@ -12,9 +12,9 @@ namespace Poushec.UpdateCatalogParser.Models
     public class CatalogResponse
     {
         private HttpClient _client;
-        private string _searchQueryUri;
         private HtmlNode? _nextPage; 
-
+        
+        internal string SearchQueryUri;
         internal string EventArgument;
         internal string EventValidation;
         internal string ViewState;
@@ -37,7 +37,7 @@ namespace Poushec.UpdateCatalogParser.Models
         ) 
         {
             _client = client;
-            _searchQueryUri = searchQueryUri;
+            SearchQueryUri = searchQueryUri;
 
             this.SearchResults = searchResults;
             this.EventArgument = eventArgument;
@@ -71,13 +71,13 @@ namespace Poushec.UpdateCatalogParser.Models
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(_searchQueryUri, requestContent);
+            HttpResponseMessage response = await _client.PostAsync(SearchQueryUri, requestContent);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return CatalogResponse.ParseFromHtmlPage(HtmlDoc, _client, _searchQueryUri);
+            return CatalogResponse.ParseFromHtmlPage(HtmlDoc, _client, SearchQueryUri);
         }
 
         internal static CatalogResponse ParseFromHtmlPage(HtmlDocument htmlDoc, HttpClient client, string searchQueryUri)
