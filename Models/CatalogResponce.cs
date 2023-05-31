@@ -15,11 +15,12 @@ namespace Poushec.UpdateCatalogParser.Models
         private string _searchQueryUri;
         private HtmlNode? _nextPage; 
 
+        internal string EventArgument;
+        internal string EventValidation;
+        internal string ViewState;
+        internal string ViewStateGenerator;
+
         public List<CatalogSearchResult> SearchResults;
-        public string EventArgument;
-        public string EventValidation;
-        public string ViewState;
-        public string ViewStateGenerator;
         public int ResultsCount;
         public bool FinalPage => _nextPage is null;
 
