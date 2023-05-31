@@ -16,7 +16,7 @@ namespace Poushec.UpdateCatalogParser
     public class CatalogClient
     {
         private byte _pageReloadAttempts;
-        private HttpClient _client;
+        internal HttpClient _client;
 
         public CatalogClient(byte pageReloadAttemptsAllowed = 3)
         {
@@ -81,8 +81,8 @@ namespace Poushec.UpdateCatalogParser
             
             List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
             pageReloadAttemptsLeft = _pageReloadAttempts;
-
-            while (lastCatalogResponse.NextPage != null)
+            
+            while (!lastCatalogResponse.FinalPage)
             {
                 if (pageReloadAttemptsLeft == 0)
                 {
@@ -91,7 +91,7 @@ namespace Poushec.UpdateCatalogParser
 
                 try
                 {
-                    lastCatalogResponse = await _loadNextPageResults(searchQueryUrl, lastCatalogResponse);
+                    lastCatalogResponse = await lastCatalogResponse.ParseNextPageAsync();
                     searchResults.AddRange(lastCatalogResponse.SearchResults);
                     pageReloadAttemptsLeft = _pageReloadAttempts; // Reset page refresh attempts count
                 }
@@ -110,7 +110,56 @@ namespace Poushec.UpdateCatalogParser
                 }
             }
 
+            if (ignoreDuplicates)
+            {
+                return searchResults.DistinctBy(result => (result.SizeInBytes, result.Title)).ToList();
+            }
+
             return searchResults;
+        }
+
+        /// <summary>
+        /// Sends search query to catalog.update.microsoft.com and returns a CatalogResponse
+        /// object representing the first results page. Other pages can be requested later by
+        /// calling CatalogResponse.ParseNextPageAsync method
+        /// </summary>
+        /// <param name="Query">Search Query</param>
+        /// <returns>CatalogResponse object representing the first results page</returns>
+        public async Task<CatalogResponse> GetFirstPageFromSearchQueryAsync(string Query)
+        {
+            string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
+            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
+            
+            CatalogResponse? catalogFirstPage = null;
+            byte pageReloadAttemptsLeft = _pageReloadAttempts;
+            
+            while (catalogFirstPage is null)
+            {
+                if (pageReloadAttemptsLeft == 0)
+                {
+                    throw new CatalogErrorException($"Search results page was not successfully loaded after {_pageReloadAttempts} attempts to refresh it");
+                }
+
+                try
+                {
+                    catalogFirstPage = await _sendSearchQueryAsync(searchQueryUrl);
+                }
+                catch (TaskCanceledException)
+                {
+                    // Request timed out - it happens. We'll try to reload a page
+                    pageReloadAttemptsLeft--;
+                    continue;
+                }
+                catch (CatalogFailedToLoadSearchResultsPageException)
+                {
+                    // Sometimes catalog responses with an empty search results table.
+                    // Refreshing a page usually helps, so that's what we'll try to do
+                    pageReloadAttemptsLeft--;
+                    continue;
+                }
+            }
+
+            return catalogFirstPage;
         }
         
         /// <summary>
@@ -188,7 +237,7 @@ namespace Poushec.UpdateCatalogParser
 
                 default: throw new NotImplementedException();
             }
-        }
+        }    
 
         private async Task<CatalogResponse> _sendSearchQueryAsync(string requestUri)
         {
@@ -203,29 +252,7 @@ namespace Poushec.UpdateCatalogParser
                 throw new CatalogNoResultsException();
             }
 
-            return CatalogResponse.ParseFromHtmlPage(HtmlDoc);
-        }
-
-        private async Task<CatalogResponse> _loadNextPageResults(string requestUri, CatalogResponse previousResponse)
-        {
-            var formData = new Dictionary<string, string>() 
-            {
-                { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
-                { "__EVENTARGUMENT",        previousResponse.EventArgument },
-                { "__VIEWSTATE",            previousResponse.ViewState },
-                { "__VIEWSTATEGENERATOR",   previousResponse.ViewStateGenerator },
-                { "__EVENTVALIDATION",      previousResponse.EventValidation }
-            };
-
-            var requestContent = new FormUrlEncodedContent(formData); 
-
-            HttpResponseMessage response = await _client.PostAsync(requestUri, requestContent);
-            response.EnsureSuccessStatusCode();
-            
-            var HtmlDoc = new HtmlDocument();
-            HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
-
-            return CatalogResponse.ParseFromHtmlPage(HtmlDoc);
+            return CatalogResponse.ParseFromHtmlPage(HtmlDoc, _client, requestUri);
         }
     }
 }
