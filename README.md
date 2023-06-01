@@ -54,6 +54,8 @@ This method returns a CatalogResponse object representing the current search res
 2. Total search query results count (`ResultsCount`)
 3. The field indicating if it is a final page (`FinalPage`)
 
+**Both of these methods has optional arguments sortBy and sortDirection. Use them if you want Catalog to sort your query results.**   
+
 To get more info on a particular update (which you would normally get by following the link on the results list) pass one of the CatalogSearchResult objects you've got from SendSearchQueryAsync to this method: 
 
 ``` C#
