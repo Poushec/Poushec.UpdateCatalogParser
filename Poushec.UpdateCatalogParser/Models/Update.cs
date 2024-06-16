@@ -10,8 +10,8 @@ namespace Poushec.UpdateCatalogParser.Models
         public string MSRCNumber { get; set; } = String.Empty;
         public string MSRCSeverity { get; set; } = String.Empty;
         public string KBArticleNumbers { get; set; } = String.Empty;
-        public List<string> SupersededBy { get; set; } = new();
-        public List<string> Supersedes { get; set; } = new();
+        public List<string> SupersededBy { get; set; } = new List<string>();
+        public List<string> Supersedes { get; set; } = new List<string>();
 
         public Update(UpdateBase updateBase) : base(updateBase) 
         {

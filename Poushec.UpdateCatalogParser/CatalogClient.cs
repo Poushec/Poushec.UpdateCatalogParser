@@ -8,6 +8,7 @@ using Poushec.UpdateCatalogParser.Models;
 using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
 using Poushec.UpdateCatalogParser.Enums;
+using Poushec.UpdateCatalogParser.Extensions;
 
 namespace Poushec.UpdateCatalogParser
 {
@@ -59,7 +60,7 @@ namespace Poushec.UpdateCatalogParser
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
             string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
             
-            CatalogResponse? lastCatalogResponse = null;
+            CatalogResponse lastCatalogResponse = null;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
             
             while (lastCatalogResponse is null)
@@ -93,7 +94,7 @@ namespace Poushec.UpdateCatalogParser
                 }
             }
 
-            if (sortBy is not SortBy.None)
+            if (sortBy != SortBy.None)
             {
                 // This will sort results in the ascending order
                 lastCatalogResponse = await _sortSearchResults(Query, lastCatalogResponse, sortBy);
@@ -145,9 +146,9 @@ namespace Poushec.UpdateCatalogParser
         }
 
         /// <summary>
-        /// Sends search query to catalog.update.microsoft.com and returns a CatalogResponse
+        /// Sends search query to <seealso cref="https://catalog.update.microsoft.com"/> and returns a CatalogResponse
         /// object representing the first results page. Other pages can be requested later by
-        /// calling CatalogResponse.ParseNextPageAsync method
+        /// calling <see cref="CatalogResponse.ParseNextPageAsync"/> method
         /// </summary>
         /// <param name="Query">Search Query</param>
         /// <param name="sortBy">
@@ -167,7 +168,7 @@ namespace Poushec.UpdateCatalogParser
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
             string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
             
-            CatalogResponse? catalogFirstPage = null;
+            CatalogResponse catalogFirstPage = null;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
             
             while (catalogFirstPage is null)
@@ -196,7 +197,7 @@ namespace Poushec.UpdateCatalogParser
                 }
             }
 
-            if (sortBy is not SortBy.None)
+            if (sortBy != SortBy.None)
             {
                 // This will sort results in the ascending order
                 catalogFirstPage = await _sortSearchResults(Query, catalogFirstPage, sortBy);
@@ -216,7 +217,7 @@ namespace Poushec.UpdateCatalogParser
         /// </summary>
         /// <param name="searchResult">CatalogSearchResult from search query</param>
         /// <returns>Null is request was unsuccessful or UpdateBase (Driver/Update) object with all collected details</returns>
-        public async Task<UpdateBase?> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
+        public async Task<UpdateBase> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
             try
             {
@@ -290,16 +291,18 @@ namespace Poushec.UpdateCatalogParser
         
         private async Task<CatalogResponse> _sortSearchResults(string searchQuery, CatalogResponse unsortedResponse, SortBy sortBy)
         {
-            string eventTarget = sortBy switch 
+            string eventTarget = String.Empty;
+
+            switch (sortBy)
             {
-                SortBy.Title =>             "ctl00$catalogBody$updateMatches$ctl02$titleHeaderLink",
-                SortBy.Products =>          "ctl00$catalogBody$updateMatches$ctl02$productsHeaderLink",
-                SortBy.Classification =>    "ctl00$catalogBody$updateMatches$ctl02$classHeaderLink",
-                SortBy.LastUpdated =>       "ctl00$catalogBody$updateMatches$ctl02$dateHeaderLink",
-                SortBy.Version =>           "ctl00$catalogBody$updateMatches$ctl02$versionHeaderLink",
-                SortBy.Size =>              "ctl00$catalogBody$updateMatches$ctl02$sizeHeaderLink",
-                _ => throw new NotImplementedException("Failed to sort search results. Unknown sortBy value")
-            };
+                case SortBy.Title: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$titleHeaderLink"; break;
+                case SortBy.Products: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$productsHeaderLink"; break;
+                case SortBy.Classification: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$classHeaderLink"; break;
+                case SortBy.LastUpdated: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$dateHeaderLink"; break;
+                case SortBy.Version: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$versionHeaderLink"; break;
+                case SortBy.Size: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$sizeHeaderLink"; break;
+                default: throw new NotImplementedException("Failed to sort search results. Unknown sortBy value");
+            }
 
             var formData = new Dictionary<string, string>() 
             {
@@ -330,7 +333,7 @@ namespace Poushec.UpdateCatalogParser
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            if (HtmlDoc.GetElementbyId("ctl00_catalogBody_noResultText") is not null)
+            if (HtmlDoc.GetElementbyId("ctl00_catalogBody_noResultText") != null)
             {
                 throw new CatalogNoResultsException();
             }

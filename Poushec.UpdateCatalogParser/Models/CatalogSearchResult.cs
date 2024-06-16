@@ -8,7 +8,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public string Title { get; set; }
         public string Products { get; set; }
         public string Classification { get; set; }
-        public DateOnly LastUpdated { get; set; }
+        public DateTime LastUpdated { get; set; }
         public string Version { get; set; }
         public string Size { get; set; }
         public int SizeInBytes { get; set; }
@@ -18,7 +18,7 @@ namespace Poushec.UpdateCatalogParser.Models
             string title, 
             string products, 
             string classification, 
-            DateOnly lastUpdated, 
+            DateTime lastUpdated, 
             string version, 
             string size, 
             int sizeInBytes, 
@@ -41,7 +41,7 @@ namespace Poushec.UpdateCatalogParser.Models
             string title = rowCells[1].InnerText.Trim();
             string products = rowCells[2].InnerText.Trim();
             string classification = rowCells[3].InnerText.Trim();
-            DateOnly lastUpdated = DateOnly.Parse(rowCells[4].InnerText.Trim());
+            DateTime lastUpdated = DateTime.Parse(rowCells[4].InnerText.Trim());
             string version = rowCells[5].InnerText.Trim();
             string size = rowCells[6].SelectNodes("span")[0].InnerText;
             int sizeInBytes = int.Parse(rowCells[6].SelectNodes("span")[1].InnerHtml);
