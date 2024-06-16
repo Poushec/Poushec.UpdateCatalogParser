@@ -105,7 +105,7 @@ namespace UpdateCatalogParser.Tests
         public async Task Send_Search_Query_SortDirection_Ascending_Parameter_Is_Respected(string searchQuery, SortBy sortBy, SortDirection sortDirection)
         {
             var catalogClient = new CatalogClient();
-            CatalogResponse firstPage = await catalogClient.GetFirstPageFromSearchQueryAsync(searchQuery, sortBy: sortBy, sortDirection: SortDirection.Ascending);
+            CatalogResponse firstPage = await catalogClient.GetFirstPageFromSearchQueryAsync(searchQuery, sortBy: sortBy, sortDirection: sortDirection);
 
             Assert.NotNull(firstPage);
             Assert.NotEmpty(firstPage.SearchResults);
@@ -118,7 +118,7 @@ namespace UpdateCatalogParser.Tests
         public async Task Send_Search_Query_SortDirection_Descending_Parameter_Is_Respected(string searchQuery, SortBy sortBy, SortDirection sortDirection)
         {
             var catalogClient = new CatalogClient();
-            CatalogResponse firstPage = await catalogClient.GetFirstPageFromSearchQueryAsync(searchQuery, sortBy: sortBy, sortDirection: SortDirection.Ascending);
+            CatalogResponse firstPage = await catalogClient.GetFirstPageFromSearchQueryAsync(searchQuery, sortBy: sortBy, sortDirection: sortDirection);
 
             Assert.NotNull(firstPage);
             Assert.NotEmpty(firstPage.SearchResults);
