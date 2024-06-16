@@ -24,7 +24,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public int ResultsCount;
         public bool FinalPage => _nextPage is null;
 
-        private CatalogResponse(
+        internal CatalogResponse(
             HttpClient client,
             string searchQueryUri,
             List<CatalogSearchResult> searchResults, 
@@ -77,47 +77,7 @@ namespace Poushec.UpdateCatalogParser.Models
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return CatalogResponse.ParseFromHtmlPage(HtmlDoc, _client, SearchQueryUri);
-        }
-
-        internal static CatalogResponse ParseFromHtmlPage(HtmlDocument htmlDoc, HttpClient client, string searchQueryUri)
-        {
-            string eventArgument = htmlDoc.GetElementbyId("__EVENTARGUMENT")?.FirstChild?.Attributes["value"]?.Value ?? String.Empty;
-            string eventValidation = htmlDoc.GetElementbyId("__EVENTVALIDATION").GetAttributes().Where(att => att.Name == "value").First().Value;
-            string viewState = htmlDoc.GetElementbyId("__VIEWSTATE").GetAttributes().Where(att => att.Name == "value").First().Value;
-            string viewStateGenerator = htmlDoc.GetElementbyId("__VIEWSTATEGENERATOR").GetAttributes().Where(att => att.Name == "value").First().Value;
-            HtmlNode nextPage = htmlDoc.GetElementbyId("ctl00_catalogBody_nextPageLinkText");
-
-            string resultsCountString = htmlDoc.GetElementbyId("ctl00_catalogBody_searchDuration").InnerText;
-            int resultsCount = int.Parse(Regex.Match(resultsCountString, "(?<=of )\\d{1,4}").Value);
-
-            HtmlNode table = htmlDoc.GetElementbyId("ctl00_catalogBody_updateMatches");
-
-            if (table is null)
-            {
-                throw new CatalogFailedToLoadSearchResultsPageException("Catalog response does not contains a search results table");
-            }
-
-            HtmlNodeCollection searchResultsRows = table.SelectNodes("tr");
-
-            List<CatalogSearchResult> searchResults = new List<CatalogSearchResult>();
-
-            foreach (var resultsRow in searchResultsRows.Skip(1)) // First row is always a headerRow 
-            {
-                searchResults.Add(CatalogSearchResult.ParseFromResultsTableRow(resultsRow));
-            }
-
-            return new CatalogResponse(
-                client, 
-                searchQueryUri, 
-                searchResults, 
-                eventArgument, 
-                eventValidation, 
-                viewState, 
-                viewStateGenerator, 
-                nextPage, 
-                resultsCount
-            );
+            return Parser.ParseFromHtmlPage(HtmlDoc, _client, SearchQueryUri);
         }
     }
 }

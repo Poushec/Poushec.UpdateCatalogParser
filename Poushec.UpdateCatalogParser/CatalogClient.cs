@@ -58,8 +58,8 @@ namespace Poushec.UpdateCatalogParser
         )
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
-            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
-            
+            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}");
+
             CatalogResponse lastCatalogResponse = null;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
             
@@ -72,7 +72,7 @@ namespace Poushec.UpdateCatalogParser
 
                 try
                 {
-                    lastCatalogResponse = await _sendSearchQueryAsync(searchQueryUrl);
+                    lastCatalogResponse = await SendSearchQueryAsync(searchQueryUrl);
                 }
                 catch (TaskCanceledException)
                 {
@@ -97,12 +97,12 @@ namespace Poushec.UpdateCatalogParser
             if (sortBy != SortBy.None)
             {
                 // This will sort results in the ascending order
-                lastCatalogResponse = await _sortSearchResults(Query, lastCatalogResponse, sortBy);
+                lastCatalogResponse = await SortSearchResults(Query, lastCatalogResponse, sortBy);
             
                 if (sortDirection is SortDirection.Descending)
                 {
                     // The only way to sort results in the descending order is to send the same request again 
-                    lastCatalogResponse = await _sortSearchResults(Query, lastCatalogResponse, sortBy);
+                    lastCatalogResponse = await SortSearchResults(Query, lastCatalogResponse, sortBy);
                 }
             }
             
@@ -180,7 +180,7 @@ namespace Poushec.UpdateCatalogParser
 
                 try
                 {
-                    catalogFirstPage = await _sendSearchQueryAsync(searchQueryUrl);
+                    catalogFirstPage = await SendSearchQueryAsync(searchQueryUrl);
                 }
                 catch (TaskCanceledException)
                 {
@@ -200,12 +200,12 @@ namespace Poushec.UpdateCatalogParser
             if (sortBy != SortBy.None)
             {
                 // This will sort results in the ascending order
-                catalogFirstPage = await _sortSearchResults(Query, catalogFirstPage, sortBy);
+                catalogFirstPage = await SortSearchResults(Query, catalogFirstPage, sortBy);
             
                 if (sortDirection is SortDirection.Descending)
                 {
                     // The only way to sort results in the descending order is to send the same request again 
-                    catalogFirstPage = await _sortSearchResults(Query, catalogFirstPage, sortBy);
+                    catalogFirstPage = await SortSearchResults(Query, catalogFirstPage, sortBy);
                 }
             }
 
@@ -289,7 +289,7 @@ namespace Poushec.UpdateCatalogParser
             }
         }
         
-        private async Task<CatalogResponse> _sortSearchResults(string searchQuery, CatalogResponse unsortedResponse, SortBy sortBy)
+        private async Task<CatalogResponse> SortSearchResults(string searchQuery, CatalogResponse unsortedResponse, SortBy sortBy)
         {
             string eventTarget = String.Empty;
 
@@ -322,10 +322,10 @@ namespace Poushec.UpdateCatalogParser
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return CatalogResponse.ParseFromHtmlPage(HtmlDoc, _client, unsortedResponse.SearchQueryUri);
+            return Parser.ParseFromHtmlPage(HtmlDoc, _client, unsortedResponse.SearchQueryUri);
         }
 
-        private async Task<CatalogResponse> _sendSearchQueryAsync(string requestUri)
+        private async Task<CatalogResponse> SendSearchQueryAsync(string requestUri)
         {
             HttpResponseMessage response = await _client.GetAsync(requestUri);
             response.EnsureSuccessStatusCode();
@@ -338,7 +338,7 @@ namespace Poushec.UpdateCatalogParser
                 throw new CatalogNoResultsException();
             }
 
-            return CatalogResponse.ParseFromHtmlPage(HtmlDoc, _client, requestUri);
+            return Parser.ParseFromHtmlPage(HtmlDoc, _client, requestUri);
         }
     }
 }
