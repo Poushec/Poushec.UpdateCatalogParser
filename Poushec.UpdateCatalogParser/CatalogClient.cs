@@ -118,7 +118,7 @@ namespace Poushec.UpdateCatalogParser
 
                 try
                 {
-                    lastCatalogResponse = await lastCatalogResponse.ParseNextPageAsync();
+                    lastCatalogResponse = await ParseNextPageAsync(lastCatalogResponse);
                     searchResults.AddRange(lastCatalogResponse.SearchResults);
                     pageReloadAttemptsLeft = _pageReloadAttempts; // Reset page refresh attempts count
                 }
@@ -211,6 +211,39 @@ namespace Poushec.UpdateCatalogParser
 
             return catalogFirstPage;
         }
+
+        /// <summary>
+        /// Loads and parses the next page of the search results. If this method is called 
+        /// on a final page - <see cref="CatalogNoResultsException"/> will be thrown
+        /// </summary>
+        /// <returns><see cref="CatalogResponse"/> object representing search query results from the next page</returns>
+        public async Task<CatalogResponse> ParseNextPageAsync(CatalogResponse currentPage)
+        {
+            if (currentPage.FinalPage)
+            {
+                throw new CatalogNoResultsException("No more search results available. This is a final page.");
+            }
+
+            var formData = new Dictionary<string, string>() 
+            {
+                { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
+                { "__EVENTARGUMENT",        currentPage.EventArgument },
+                { "__VIEWSTATE",            currentPage.ViewState },
+                { "__VIEWSTATEGENERATOR",   currentPage.ViewStateGenerator },
+                { "__EVENTVALIDATION",      currentPage.EventValidation }
+            };
+
+            var requestContent = new FormUrlEncodedContent(formData); 
+
+            HttpResponseMessage response = await _client.PostAsync(currentPage.SearchQueryUri, requestContent);
+            response.EnsureSuccessStatusCode();
+            
+            var HtmlDoc = new HtmlDocument();
+            HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
+
+            return Parser.ParseFromHtmlPage(HtmlDoc, _client, currentPage.SearchQueryUri);
+        }
+        
         
         /// <summary>
         /// Attempts to collect update details from Update Details Page and Download Page 
