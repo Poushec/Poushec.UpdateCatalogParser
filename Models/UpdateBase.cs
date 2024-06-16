@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Poushec.UpdateCatalogParser.Exceptions;
+using Poushec.UpdateCatalogParser.Extensions;
 
 namespace Poushec.UpdateCatalogParser.Models
 {
@@ -18,23 +19,23 @@ namespace Poushec.UpdateCatalogParser.Models
         private readonly Regex _urlRegex = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)");
         private readonly Regex _downloadLinkRegex = new Regex(@"(http[s]?\://dl\.delivery\.mp\.microsoft\.com\/[^\'\""]*)|(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)|(http[s]://catalog\.s\.download\.windowsupdate\.com.*?(?=\'))");
 
-        protected HtmlDocument? _detailsPage; 
+        protected HtmlDocument _detailsPage; 
 
         // Info from search results
         public string Title { get; set; }
         public string UpdateID { get; set; }
         public List<string> Products { get; set; }
         public string Classification { get; set; }
-        public DateOnly LastUpdated { get; set; }
+        public DateTime LastUpdated { get; set; }
         public string Size { get; set; }
         public int SizeInBytes { get; set; }
 
         // Info from details page
         public string Description { get; set; } = String.Empty;
-        public List<string> Architectures { get; set; } = new();
-        public List<string> SupportedLanguages { get; set; } = new();
-        public List<string> MoreInformation { get; set; } = new();
-        public List<string> SupportUrl { get; set; } = new(); 
+        public List<string> Architectures { get; set; } = new List<string>();
+        public List<string> SupportedLanguages { get; set; } = new List<string>();
+        public List<string> MoreInformation { get; set; } = new List<string>();
+        public List<string> SupportUrl { get; set; } = new List<string>(); 
         public string RestartBehavior { get; set; } = String.Empty;
         public string MayRequestUserInput { get; set; } = String.Empty;
         public string MustBeInstalledExclusively { get; set; } = String.Empty;
@@ -43,7 +44,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public string UninstallSteps { get; set; } = String.Empty;
 
         // Download links from download page
-        public List<string> DownloadLinks { get; set; } = new();
+        public List<string> DownloadLinks { get; set; } = new List<string>();
 
         internal UpdateBase(CatalogSearchResult resultRow) 
         {
@@ -53,7 +54,7 @@ namespace Poushec.UpdateCatalogParser.Models
             this.LastUpdated = resultRow.LastUpdated;
             this.Size = resultRow.Size;
             this.SizeInBytes = resultRow.SizeInBytes;
-            this.Products = resultRow.Products.Trim().Split(",").ToList(); 
+            this.Products = resultRow.Products.Trim().Split(',').ToList(); 
         }
 
         internal UpdateBase(UpdateBase updateBase)
@@ -101,7 +102,7 @@ namespace Poushec.UpdateCatalogParser.Models
             _detailsPage.GetElementbyId("archDiv")
                 .LastChild
                 .InnerText.Trim()
-                .Split(",")
+                .Split(',')
                 .ToList()
                 .ForEach(arch => 
                 {
@@ -111,7 +112,7 @@ namespace Poushec.UpdateCatalogParser.Models
             _detailsPage.GetElementbyId("languagesDiv")
                 .LastChild
                 .InnerText.Trim()
-                .Split(",")
+                .Split(',')
                 .ToList()
                 .ForEach(lang => 
                 {
@@ -121,7 +122,7 @@ namespace Poushec.UpdateCatalogParser.Models
             string moreInfoDivContent = _detailsPage.GetElementbyId("moreInfoDiv").InnerHtml;
             MatchCollection moreInfoUrlMatches = _urlRegex.Matches(moreInfoDivContent);
 
-            if (moreInfoUrlMatches.Any())
+            if (moreInfoUrlMatches.Count > 0)
             {
                 this.MoreInformation = moreInfoUrlMatches.Select(match => match.Value)
                     .Distinct()
@@ -131,7 +132,7 @@ namespace Poushec.UpdateCatalogParser.Models
             string supportUrlDivContent = _detailsPage.GetElementbyId("suportUrlDiv").InnerHtml;
             MatchCollection supportUrlMatches = _urlRegex.Matches(supportUrlDivContent);
 
-            if (supportUrlMatches.Any())
+            if (supportUrlMatches.Count > 0)
             {
                 this.SupportUrl = supportUrlMatches.Select(match => match.Value)
                     .Distinct()
@@ -186,7 +187,7 @@ namespace Poushec.UpdateCatalogParser.Models
             }
             catch (TaskCanceledException)
             {
-                throw new RequestToCatalogTimedOutException();
+                throw new RequestToCatalogTimedOutException(); 
             }
 
             response.EnsureSuccessStatusCode();

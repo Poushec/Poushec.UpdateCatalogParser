@@ -13,8 +13,8 @@ namespace Poushec.UpdateCatalogParser.Models
         public string DriverModel { get; set; } = String.Empty;
         public string DriverProvider { get; set; } = String.Empty;
         public string DriverVersion { get; set; } = String.Empty;
-        public DateOnly VersionDate { get; set; } = DateOnly.MinValue;
-        public List<string> HardwareIDs { get; set; } = new();
+        public DateTime VersionDate { get; set; } = DateTime.MinValue;
+        public List<string> HardwareIDs { get; set; } = new List<string>();
 
         public Driver(UpdateBase updateBase) : base(updateBase) 
         {
@@ -37,7 +37,7 @@ namespace Poushec.UpdateCatalogParser.Models
                 this.DriverModel = _detailsPage.GetElementbyId("ScopedViewHandler_driverModel").InnerText;
                 this.DriverProvider = _detailsPage.GetElementbyId("ScopedViewHandler_driverProvider").InnerText;
                 this.DriverVersion = _detailsPage.GetElementbyId("ScopedViewHandler_version").InnerText;
-                this.VersionDate = DateOnly.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
+                this.VersionDate = DateTime.Parse(_detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
             }
             catch (Exception ex)
             {

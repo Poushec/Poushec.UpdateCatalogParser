@@ -12,7 +12,7 @@ namespace Poushec.UpdateCatalogParser.Models
     public class CatalogResponse
     {
         private HttpClient _client;
-        private HtmlNode? _nextPage; 
+        private HtmlNode _nextPage; 
         
         internal string SearchQueryUri;
         internal string EventArgument;
@@ -100,7 +100,7 @@ namespace Poushec.UpdateCatalogParser.Models
 
             HtmlNodeCollection searchResultsRows = table.SelectNodes("tr");
 
-            List<CatalogSearchResult> searchResults = new();
+            List<CatalogSearchResult> searchResults = new List<CatalogSearchResult>();
 
             foreach (var resultsRow in searchResultsRows.Skip(1)) // First row is always a headerRow 
             {
