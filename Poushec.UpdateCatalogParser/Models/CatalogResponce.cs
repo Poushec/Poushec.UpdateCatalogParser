@@ -22,7 +22,7 @@ namespace Poushec.UpdateCatalogParser.Models
 
         public List<CatalogSearchResult> SearchResults;
         public int ResultsCount;
-        public bool FinalPage => _nextPage is null;
+        public readonly bool FinalPage;
 
         internal CatalogResponse(
             HttpClient client,
@@ -32,7 +32,7 @@ namespace Poushec.UpdateCatalogParser.Models
             string eventValidation,
             string viewState,
             string viewStateGenerator,
-            HtmlNode nextPage,
+            bool finalPage,
             int resultsCount
         ) 
         {
@@ -44,7 +44,7 @@ namespace Poushec.UpdateCatalogParser.Models
             this.EventValidation = eventValidation;
             this.ViewState = viewState;
             this.ViewStateGenerator = viewStateGenerator;
-            this._nextPage = nextPage;
+            this.FinalPage = finalPage;
             this.ResultsCount = resultsCount;
         }
 

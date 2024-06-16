@@ -21,7 +21,7 @@ namespace Poushec.UpdateCatalogParser
             string eventValidation = htmlDoc.GetElementbyId("__EVENTVALIDATION").GetAttributes().Where(att => att.Name == "value").First().Value;
             string viewState = htmlDoc.GetElementbyId("__VIEWSTATE").GetAttributes().Where(att => att.Name == "value").First().Value;
             string viewStateGenerator = htmlDoc.GetElementbyId("__VIEWSTATEGENERATOR").GetAttributes().Where(att => att.Name == "value").First().Value;
-            HtmlNode nextPage = htmlDoc.GetElementbyId("ctl00_catalogBody_nextPageLinkText");
+            bool finalPage = htmlDoc.GetElementbyId("ctl00_catalogBody_nextPageLinkText") is null;
 
             string resultsCountString = htmlDoc.GetElementbyId("ctl00_catalogBody_searchDuration").InnerText;
             int resultsCount = int.Parse(Regex.Match(resultsCountString, "(?<=of )\\d{1,4}").Value);
@@ -48,7 +48,7 @@ namespace Poushec.UpdateCatalogParser
                 eventValidation, 
                 viewState, 
                 viewStateGenerator, 
-                nextPage, 
+                finalPage, 
                 resultsCount
             );
         }
