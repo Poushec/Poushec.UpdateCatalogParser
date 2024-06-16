@@ -7,7 +7,6 @@ using System.Linq;
 using Poushec.UpdateCatalogParser.Models;
 using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
-using Poushec.UpdateCatalogParser.Enums;
 using Poushec.UpdateCatalogParser.Extensions;
 
 namespace Poushec.UpdateCatalogParser
@@ -148,7 +147,7 @@ namespace Poushec.UpdateCatalogParser
         /// <summary>
         /// Sends search query to <seealso cref="https://catalog.update.microsoft.com"/> and returns a CatalogResponse
         /// object representing the first results page. Other pages can be requested later by
-        /// calling <see cref="CatalogResponse.ParseNextPageAsync"/> method
+        /// calling <see cref="ParseNextPageAsync"/> method
         /// </summary>
         /// <param name="Query">Search Query</param>
         /// <param name="sortBy">
@@ -157,8 +156,8 @@ namespace Poushec.UpdateCatalogParser
         /// Available values are the same as in catalog: Title, Products, Classification, LastUpdated, Version, Size 
         /// By default results are sorted by LastUpdated
         /// </param>
-        /// <param name="sortDirection">Sorting direction. Ascending or Descending</param>
-        /// <returns>CatalogResponse object representing the first results page</returns>
+        /// <param name="sortDirection">Sorting direction. <see cref="SortDirection.Ascending">Ascending</see> or <see cref="SortDirection.Descending">Descending</see></param>
+        /// <returns><see cref="CatalogResponse"/> object representing the first results page</returns>
         public async Task<CatalogResponse> GetFirstPageFromSearchQueryAsync(
             string Query, 
             SortBy sortBy = SortBy.None, 
