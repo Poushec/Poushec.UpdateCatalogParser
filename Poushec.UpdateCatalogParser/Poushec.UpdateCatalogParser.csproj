@@ -19,7 +19,6 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="System.Text.Json" Version="8.0.3" />
-    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
