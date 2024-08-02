@@ -32,26 +32,19 @@ namespace Poushec.UpdateCatalogParser
         }
         
         /// <summary>
-        /// Sends search query to catalog.update.microsoft.com
+        /// Sends search query to <see href="https://catalog.update.microsoft.com">catalog.update.microsoft.com</see>
         /// </summary>
         /// <param name="Query">Search Query</param>
         /// <param name="ignoreDuplicates">
-        /// (Optional)
-        /// TRUE - founded updates that have the same Title and SizeInBytes
-        /// fields as any of already founded updates will be ignored.
-        /// FALSE - collects every founded update.
+        /// (Optional) Excludes updates with the same Title and SizeInBytes values from the search results. 
+        /// False by default. 
         /// </param>
-        /// <param name="sortBy">
-        /// (Optional)
-        /// Use this argument if you want Catalog to sort search results.
-        /// Available values are the same as in catalog: Title, Products, Classification, LastUpdated, Version, Size 
-        /// By default results are sorted by LastUpdated
-        /// </param>
-        /// <param name="sortDirection">Sorting direction. Ascending or Descending</param>
-        /// <returns>List of objects derived from UpdateBase class (Update or Driver)</returns>
+        /// <param name="sortBy">(Optional) If provided, client will send additional request to the catalog for it to search the results list.</param>
+        /// <param name="sortDirection">(Optional) Sets the sort direction</param>
+        /// <returns><see cref="CatalogSearchResult"/> list representing the search results</returns>
         public async Task<List<CatalogSearchResult>> SendSearchQueryAsync(
             string Query, 
-            bool ignoreDuplicates = true, 
+            bool ignoreDuplicates = false, 
             SortBy sortBy = SortBy.None, 
             SortDirection sortDirection = SortDirection.Descending
         )

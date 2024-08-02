@@ -47,7 +47,7 @@ namespace UpdateCatalogParser.Tests
 
             while (!currentPage.FinalPage)
             {
-                currentPage = await currentPage.ParseNextPageAsync();
+                currentPage = await catalogClient.ParseNextPageAsync(currentPage);
 
                 Assert.NotNull(currentPage);
                 Assert.NotEmpty(currentPage.SearchResults);
