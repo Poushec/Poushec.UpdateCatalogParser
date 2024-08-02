@@ -101,7 +101,7 @@ namespace Poushec.UpdateCatalogParser
             List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
             pageReloadAttemptsLeft = _pageReloadAttempts;
             
-            while (!lastCatalogResponse.FinalPage)
+            while (!lastCatalogResponse._finalPage)
             {
                 if (pageReloadAttemptsLeft == 0)
                 {
@@ -211,7 +211,7 @@ namespace Poushec.UpdateCatalogParser
         /// <returns><see cref="CatalogResponse"/> object representing search query results from the next page</returns>
         public async Task<CatalogResponse> ParseNextPageAsync(CatalogResponse currentPage)
         {
-            if (currentPage.FinalPage)
+            if (currentPage._finalPage)
             {
                 throw new CatalogNoResultsException("No more search results available. This is a final page.");
             }
@@ -219,21 +219,21 @@ namespace Poushec.UpdateCatalogParser
             var formData = new Dictionary<string, string>() 
             {
                 { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
-                { "__EVENTARGUMENT",        currentPage.EventArgument },
-                { "__VIEWSTATE",            currentPage.ViewState },
-                { "__VIEWSTATEGENERATOR",   currentPage.ViewStateGenerator },
-                { "__EVENTVALIDATION",      currentPage.EventValidation }
+                { "__EVENTARGUMENT",        currentPage._eventArgument },
+                { "__VIEWSTATE",            currentPage._viewState },
+                { "__VIEWSTATEGENERATOR",   currentPage._viewStateGenerator },
+                { "__EVENTVALIDATION",      currentPage._eventValidation }
             };
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(currentPage.SearchQueryUri, requestContent);
+            HttpResponseMessage response = await _client.PostAsync(currentPage._searchQueryUri, requestContent);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return Parser.ParseFromHtmlPage(HtmlDoc, _client, currentPage.SearchQueryUri);
+            return Parser.ParseFromHtmlPage(HtmlDoc, _client, currentPage._searchQueryUri);
         }
         
         
@@ -332,22 +332,22 @@ namespace Poushec.UpdateCatalogParser
             var formData = new Dictionary<string, string>() 
             {
                 { "__EVENTTARGET",          eventTarget },
-                { "__EVENTARGUMENT",        unsortedResponse.EventArgument },
-                { "__VIEWSTATE",            unsortedResponse.ViewState },
-                { "__VIEWSTATEGENERATOR",   unsortedResponse.ViewStateGenerator },
-                { "__EVENTVALIDATION",      unsortedResponse.EventValidation },
+                { "__EVENTARGUMENT",        unsortedResponse._eventArgument },
+                { "__VIEWSTATE",            unsortedResponse._viewState },
+                { "__VIEWSTATEGENERATOR",   unsortedResponse._viewStateGenerator },
+                { "__EVENTVALIDATION",      unsortedResponse._eventValidation },
                 { "ctl00$searchTextBox",    searchQuery }
             };
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(unsortedResponse.SearchQueryUri, requestContent);
+            HttpResponseMessage response = await _client.PostAsync(unsortedResponse._searchQueryUri, requestContent);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return Parser.ParseFromHtmlPage(HtmlDoc, _client, unsortedResponse.SearchQueryUri);
+            return Parser.ParseFromHtmlPage(HtmlDoc, _client, unsortedResponse._searchQueryUri);
         }
 
         private async Task<CatalogResponse> SendSearchQueryAsync(string requestUri)
