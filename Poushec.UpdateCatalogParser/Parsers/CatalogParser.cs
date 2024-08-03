@@ -24,7 +24,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             _httpClient = httpClient;
         }
         
-        internal UpdateBase CollectUpdateInfoFromDetailsPage(CatalogSearchResult searchResult, HtmlDocument detailsPage)
+        public UpdateBase CollectUpdateInfoFromDetailsPage(CatalogSearchResult searchResult, HtmlDocument detailsPage)
         {
             var update = new UpdateBase(searchResult);
 
@@ -74,7 +74,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             return update;
         }
         
-        internal async Task<HtmlDocument> LoadDetailsPageAsync(string updateId)
+        public async Task<HtmlDocument> LoadDetailsPageAsync(string updateId)
         {
             string detailsPageUri = $"https://www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid={updateId}";
             HttpResponseMessage responseMessage;
@@ -122,7 +122,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             }
         }
 
-        internal async Task<IEnumerable<string>> GetDownloadLinksAsync(string updateId)
+        public async Task<IEnumerable<string>> GetDownloadLinksAsync(string updateId)
         {
             var downloadPageUri = "https://www.catalog.update.microsoft.com/DownloadDialog.aspx";
 
@@ -158,7 +158,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             return downloadLinkMatches.Select(match => match.Value);
         }
 
-        internal CatalogResponse ParseSearchResultsPage(HtmlDocument htmlDoc, HttpClient client, string searchQueryUri)
+        public CatalogResponse ParseSearchResultsPage(HtmlDocument htmlDoc, string searchQueryUri)
         {
             string eventArgument = htmlDoc.GetElementbyId("__EVENTARGUMENT")?.FirstChild?.Attributes["value"]?.Value ?? String.Empty;
             string eventValidation = htmlDoc.GetElementbyId("__EVENTVALIDATION").GetAttributes().Where(att => att.Name == "value").First().Value;
@@ -184,7 +184,6 @@ namespace Poushec.UpdateCatalogParser.Parsers
                 .ToList();
 
             return new CatalogResponse(
-                client, 
                 searchQueryUri, 
                 searchResults, 
                 eventArgument, 
@@ -196,7 +195,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             );
         }
 
-        internal CatalogSearchResult ParseResultsTableRow(HtmlNode resultsRow)
+        public CatalogSearchResult ParseResultsTableRow(HtmlNode resultsRow)
         {
             HtmlNodeCollection rowCells = resultsRow.SelectNodes("td");
             
@@ -210,6 +209,60 @@ namespace Poushec.UpdateCatalogParser.Parsers
             string updateID = rowCells[7].SelectNodes("input")[0].Id;
 
             return new CatalogSearchResult(title, products, classification, lastUpdated, version, size, sizeInBytes, updateID);
+        }
+
+        private DriverProperties ParseDriverProperties(HtmlDocument detailsPage)
+        {
+            var driverProperties = new DriverProperties();
+
+            try
+            {
+                driverProperties.HardwareIDs = CollectHardwareIDs(detailsPage);
+                driverProperties.Company = detailsPage.GetElementbyId("ScopedViewHandler_company").InnerText;
+                driverProperties.DriverManufacturer = detailsPage.GetElementbyId("ScopedViewHandler_manufacturer").InnerText;
+                driverProperties.DriverClass = detailsPage.GetElementbyId("ScopedViewHandler_driverClass").InnerText;
+                driverProperties.DriverModel = detailsPage.GetElementbyId("ScopedViewHandler_driverModel").InnerText;
+                driverProperties.DriverProvider = detailsPage.GetElementbyId("ScopedViewHandler_driverProvider").InnerText;
+                driverProperties.DriverVersion = detailsPage.GetElementbyId("ScopedViewHandler_version").InnerText;
+                driverProperties.VersionDate = DateTime.Parse(detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
+            }
+            catch (Exception ex)
+            {
+                throw new ParseHtmlPageException("Failed to parse Driver details", ex);
+            }
+
+            return driverProperties;
+        }
+
+        private List<string> CollectHardwareIDs(HtmlDocument detailsPage)
+        {
+            var hwIdsDivs = detailsPage.GetElementbyId("driverhwIDs");
+
+            if (hwIdsDivs == null)
+            {
+                return new List<string>();
+            }
+
+            var hwIds = new List<string>();
+
+            hwIdsDivs.ChildNodes
+                .Where(node => node.Name == "div")
+                .ToList()
+                .ForEach(node => 
+                {
+                    var hid = node.ChildNodes
+                        .First().InnerText
+                        .Trim()
+                        .Replace(@"\r\n", "")
+                        .ToUpper();
+                    
+                    if (!String.IsNullOrEmpty(hid))
+                    {
+                        hwIds.Add(hid);
+                    }
+                });
+            
+            return hwIds;
         }
     }
 }

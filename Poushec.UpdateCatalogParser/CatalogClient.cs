@@ -8,6 +8,7 @@ using Poushec.UpdateCatalogParser.Models;
 using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
 using Poushec.UpdateCatalogParser.Extensions;
+using Poushec.UpdateCatalogParser.Parsers;
 
 namespace Poushec.UpdateCatalogParser
 {
@@ -17,18 +18,16 @@ namespace Poushec.UpdateCatalogParser
     public class CatalogClient
     {
         private byte _pageReloadAttempts;
-        internal HttpClient _client;
+        private HttpClient _client;
+        private CatalogParser _catalogParser;
 
-        public CatalogClient(byte pageReloadAttemptsAllowed = 3)
-        {
-            _client = new HttpClient();
-            _pageReloadAttempts = pageReloadAttemptsAllowed;
-        }
+        public CatalogClient(byte pageReloadAttemptsAllowed = 3) : this(new HttpClient(), pageReloadAttemptsAllowed) { }
 
         public CatalogClient(HttpClient client, byte pageReloadAttemptsAllowed = 3)
         {
             _client = client;
             _pageReloadAttempts = pageReloadAttemptsAllowed;
+            _catalogParser = new CatalogParser(client);
         }
         
         /// <summary>
@@ -233,7 +232,7 @@ namespace Poushec.UpdateCatalogParser
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return Parser.ParseFromHtmlPage(HtmlDoc, _client, currentPage._searchQueryUri);
+            return _catalogParser.ParseSearchResultsPage(HtmlDoc, currentPage._searchQueryUri);
         }
         
         
@@ -267,15 +266,14 @@ namespace Poushec.UpdateCatalogParser
         /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
         public async Task<UpdateBase> GetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
-            var updateBase = new UpdateBase(searchResult);
-
+            HtmlDocument detailsPage;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
 
             while (true)
             {
                 try 
                 {
-                    await updateBase.ParseCommonDetails(_client);
+                    detailsPage = await _catalogParser.LoadDetailsPageAsync(searchResult.UpdateID);
                     break;
                 }
                 catch (Exception ex)
@@ -287,12 +285,13 @@ namespace Poushec.UpdateCatalogParser
                         throw new UnableToCollectUpdateDetailsException($"Failed to properly parse update details page after {_pageReloadAttempts} attempts", ex);
                     }
                 }
-                
             }
+
+            UpdateBase updateBase = _catalogParser.CollectUpdateInfoFromDetailsPage(searchResult, detailsPage);
 
             if (updateBase.Classification.Contains("Driver"))
             {
-                var driverUpdate = new Driver(updateBase);
+                var driverUpdate = new DriverProperties(updateBase);
 
                 return driverUpdate;
             }
@@ -307,7 +306,7 @@ namespace Poushec.UpdateCatalogParser
                 case "Update Rollups":
                 case "Updates": 
                 case "Hotfix":
-                    var update = new Update(updateBase);
+                    var update = new AdditionalProperties(updateBase);
                     return update;
 
                 default: throw new NotImplementedException();
@@ -316,17 +315,16 @@ namespace Poushec.UpdateCatalogParser
         
         private async Task<CatalogResponse> SortSearchResults(string searchQuery, CatalogResponse unsortedResponse, SortBy sortBy)
         {
-            string eventTarget = String.Empty;
+            string eventTarget = "ctl00$catalogBody$updateMatches$ctl02$";
 
             switch (sortBy)
             {
-                case SortBy.Title: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$titleHeaderLink"; break;
-                case SortBy.Products: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$productsHeaderLink"; break;
-                case SortBy.Classification: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$classHeaderLink"; break;
-                case SortBy.LastUpdated: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$dateHeaderLink"; break;
-                case SortBy.Version: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$versionHeaderLink"; break;
-                case SortBy.Size: eventTarget = "ctl00$catalogBody$updateMatches$ctl02$sizeHeaderLink"; break;
-                default: throw new NotImplementedException("Failed to sort search results. Unknown sortBy value");
+                case SortBy.Title:           eventTarget += "titleHeaderLink"; break;
+                case SortBy.Products:        eventTarget += "productsHeaderLink"; break;
+                case SortBy.Classification:  eventTarget += "classHeaderLink"; break;
+                case SortBy.LastUpdated:     eventTarget += "dateHeaderLink"; break;
+                case SortBy.Version:         eventTarget += "versionHeaderLink"; break;
+                case SortBy.Size:            eventTarget += "sizeHeaderLink"; break;
             }
 
             var formData = new Dictionary<string, string>() 
@@ -347,7 +345,7 @@ namespace Poushec.UpdateCatalogParser
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return Parser.ParseFromHtmlPage(HtmlDoc, _client, unsortedResponse._searchQueryUri);
+            return _catalogParser.ParseSearchResultsPage(HtmlDoc, unsortedResponse._searchQueryUri);
         }
 
         private async Task<CatalogResponse> SendSearchQueryAsync(string requestUri)
@@ -363,7 +361,7 @@ namespace Poushec.UpdateCatalogParser
                 throw new CatalogNoResultsException();
             }
 
-            return Parser.ParseFromHtmlPage(HtmlDoc, _client, requestUri);
+            return _catalogParser.ParseSearchResultsPage(HtmlDoc, requestUri);
         }
     }
 }

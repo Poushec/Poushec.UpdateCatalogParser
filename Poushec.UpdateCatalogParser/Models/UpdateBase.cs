@@ -34,6 +34,10 @@ namespace Poushec.UpdateCatalogParser.Models
         // Download links from download page
         public List<string> DownloadLinks { get; set; } = new List<string>();
         
+        //Additional classification-specific info
+        public AdditionalProperties UpdateInfo { get; set; }
+        public DriverProperties DriverInfo { get; set; }
+        
         internal UpdateBase() { }
 
         internal UpdateBase(CatalogSearchResult resultRow) 

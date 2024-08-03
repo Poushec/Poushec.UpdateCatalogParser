@@ -5,7 +5,7 @@ using Poushec.UpdateCatalogParser.Exceptions;
 
 namespace Poushec.UpdateCatalogParser.Models
 {
-    public class Update : UpdateBase
+    public class AdditionalProperties
     {
         public string MSRCNumber { get; set; } = String.Empty;
         public string MSRCSeverity { get; set; } = String.Empty;
@@ -13,7 +13,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public List<string> SupersededBy { get; set; } = new List<string>();
         public List<string> Supersedes { get; set; } = new List<string>();
 
-        public Update(UpdateBase updateBase) : base(updateBase) 
+        public AdditionalProperties(UpdateBase updateBase)
         {
             _parseUpdateDetails();
         }
