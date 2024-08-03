@@ -55,10 +55,10 @@ This method returns a CatalogResponse object representing the current search res
 To get more info on a particular update (which you would normally get by following the link on the results list) pass one of the CatalogSearchResult objects you've got from SendSearchQueryAsync to this method: 
 
 ``` C#
-UpdateBase updateDetails = await catalogClient.GetUpdateDetailsAsync(CatalogSearchResult searchResult)
+UpdateInfo updateDetails = await catalogClient.GetUpdateDetailsAsync(CatalogSearchResult searchResult)
 ```
 
-It will get you an object derived from `UpdateBase` class (ether `Update` or `Driver`) with all information available about it from details and download pages, for example download links, HardwareIDs if it is a driver, Supersedes list if it is an Update etc. 
+It will get you an instance of `UpdateInfo` class with all the collected details from the details and download pages, for example download links, HardwareIDs if it is a driver, Supersedes list if it is an Update etc. 
 
 ## Example Usage
 
