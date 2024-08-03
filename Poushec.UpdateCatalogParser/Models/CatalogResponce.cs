@@ -9,12 +9,10 @@ namespace Poushec.UpdateCatalogParser.Models
         internal string _eventValidation;
         internal string _viewState;
         internal string _viewStateGenerator;
-        internal readonly bool _finalPage;
 
+        public readonly bool FinalPage;
         public List<CatalogSearchResult> SearchResults;
         public int ResultsCount;
-
-        public CatalogResponse() { }
 
         internal CatalogResponse(
             string searchQueryUri,
@@ -34,7 +32,7 @@ namespace Poushec.UpdateCatalogParser.Models
             this._eventValidation = eventValidation;
             this._viewState = viewState;
             this._viewStateGenerator = viewStateGenerator;
-            this._finalPage = finalPage;
+            this.FinalPage = finalPage;
 
             this.ResultsCount = resultsCount;
         }

@@ -99,7 +99,7 @@ namespace Poushec.UpdateCatalogParser
             List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
             pageReloadAttemptsLeft = _pageReloadAttempts;
             
-            while (!lastCatalogResponse._finalPage)
+            while (!lastCatalogResponse.FinalPage)
             {
                 if (pageReloadAttemptsLeft == 0)
                 {
@@ -209,7 +209,7 @@ namespace Poushec.UpdateCatalogParser
         /// <returns><see cref="CatalogResponse"/> object representing search query results from the next page</returns>
         public async Task<CatalogResponse> ParseNextPageAsync(CatalogResponse currentPage)
         {
-            if (currentPage._finalPage)
+            if (currentPage.FinalPage)
             {
                 throw new CatalogNoResultsException("No more search results available. This is a final page.");
             }
@@ -287,6 +287,9 @@ namespace Poushec.UpdateCatalogParser
             }
 
             UpdateInfo updateBase = _catalogParser.CollectUpdateInfoFromDetailsPage(searchResult, detailsPage);
+
+            IEnumerable<string> patchDownloadLinks = await _catalogParser.GetDownloadLinksAsync(searchResult.UpdateID);
+            updateBase.DownloadLinks.AddRange(patchDownloadLinks);
 
             if (updateBase.Classification.Contains("Driver"))
             {

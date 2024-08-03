@@ -43,7 +43,8 @@ namespace Poushec.UpdateCatalogParser
                 .Distinct()
                 .ToList();
 
-            update.SupportUrl = _urlRegex.Matches(detailsPage.GetElementbyId("supportUrlDiv").InnerHtml)
+            // I didn't spell it wrong - this div is literally called suportUrlDiv :)
+            update.SupportUrl = _urlRegex.Matches(detailsPage.GetElementbyId("suportUrlDiv").InnerHtml)
                 .Select(match => match.Value)
                 .Distinct()
                 .ToList();
@@ -100,7 +101,7 @@ namespace Poushec.UpdateCatalogParser
 
                 var errorDiv = htmlDocument.GetElementbyId("errorPageDisplayedError");
 
-                if (errorDiv != null)
+                if (errorDiv == null)
                 {
                     return htmlDocument;
                 }
