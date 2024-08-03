@@ -239,7 +239,7 @@ namespace Poushec.UpdateCatalogParser
         /// Attempts to collect update details from Update Details Page and Download Page 
         /// </summary>
         /// <param name="searchResult">CatalogSearchResult from search query</param>
-        /// <returns>Null is request was unsuccessful or UpdateBase (Driver/Update) object with all collected details</returns>
+        /// <returns>Null if request was unsuccessful or <see cref="UpdateInfo"/> object with all collected details</returns>
         public async Task<UpdateInfo> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
             try
@@ -257,7 +257,7 @@ namespace Poushec.UpdateCatalogParser
         /// Collect update details from Update Details Page and Download Page 
         /// </summary>
         /// <param name="searchResult">CatalogSearchResult from search query</param>
-        /// <returns>Ether Driver of Update object derived from UpdateBase class with all collected details</returns>
+        /// <returns><see cref="UpdateInfo"/> object representing all collected details on the given update</returns>
         /// <exception cref="UnableToCollectUpdateDetailsException">Thrown when catalog response with an error page or request was unsuccessful</exception>
         /// <exception cref="UpdateWasNotFoundException">Thrown when catalog response with an error page with error code 8DDD0024 (Not found)</exception>
         /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
