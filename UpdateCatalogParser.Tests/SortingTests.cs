@@ -1,5 +1,4 @@
 ﻿using Poushec.UpdateCatalogParser;
-using Poushec.UpdateCatalogParser.Enums;
 using Poushec.UpdateCatalogParser.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;

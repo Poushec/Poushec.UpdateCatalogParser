@@ -1,4 +1,4 @@
-namespace Poushec.UpdateCatalogParser.Enums
+﻿namespace Poushec.UpdateCatalogParser
 {
     public enum SortBy
     {
@@ -9,5 +9,11 @@ namespace Poushec.UpdateCatalogParser.Enums
         LastUpdated, 
         Version,
         Size
+    }
+
+    public enum SortDirection 
+    {
+        Ascending,
+        Descending
     }
 }
