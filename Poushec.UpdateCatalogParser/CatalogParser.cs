@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Poushec.UpdateCatalogParser
@@ -75,14 +76,14 @@ namespace Poushec.UpdateCatalogParser
             return update;
         }
 
-        public async Task<HtmlDocument> LoadDetailsPageAsync(string updateId)
+        public async Task<HtmlDocument> LoadDetailsPageAsync(string updateId, CancellationToken cancellationToken)
         {
             string detailsPageUri = $"https://www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid={updateId}";
             HttpResponseMessage responseMessage;
 
             try
             {
-                responseMessage = await _httpClient.GetAsync(detailsPageUri);
+                responseMessage = await _httpClient.GetAsync(detailsPageUri, cancellationToken);
             }
             catch (TaskCanceledException ex)
             {
@@ -123,7 +124,7 @@ namespace Poushec.UpdateCatalogParser
             }
         }
 
-        public async Task<IEnumerable<string>> GetDownloadLinksAsync(string updateId)
+        public async Task<IEnumerable<string>> GetDownloadLinksAsync(string updateId, CancellationToken cancellationToken)
         {
             var downloadPageUri = "https://www.catalog.update.microsoft.com/DownloadDialog.aspx";
 
@@ -139,7 +140,7 @@ namespace Poushec.UpdateCatalogParser
 
             try
             {
-                response = await _httpClient.PostAsync(downloadPageUri, requestContent);
+                response = await _httpClient.PostAsync(downloadPageUri, requestContent, cancellationToken);
             }
             catch (TaskCanceledException)
             {

@@ -8,6 +8,7 @@ using Poushec.UpdateCatalogParser.Models;
 using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
 using Poushec.UpdateCatalogParser.Extensions;
+using System.Threading;
 
 namespace Poushec.UpdateCatalogParser
 {
@@ -44,7 +45,8 @@ namespace Poushec.UpdateCatalogParser
             string Query, 
             bool ignoreDuplicates = false, 
             SortBy sortBy = SortBy.None, 
-            SortDirection sortDirection = SortDirection.Descending
+            SortDirection sortDirection = SortDirection.Descending,
+            CancellationToken cancellationToken = default
         )
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
@@ -62,7 +64,7 @@ namespace Poushec.UpdateCatalogParser
 
                 try
                 {
-                    lastCatalogResponse = await SendSearchQueryAsync(searchQueryUrl);
+                    lastCatalogResponse = await InternalSendSearchQueryAsync(searchQueryUrl, cancellationToken);
                 }
                 catch (TaskCanceledException)
                 {
@@ -87,12 +89,12 @@ namespace Poushec.UpdateCatalogParser
             if (sortBy != SortBy.None)
             {
                 // This will sort results in the ascending order
-                lastCatalogResponse = await SortSearchResults(Query, lastCatalogResponse, sortBy);
+                lastCatalogResponse = await SortSearchResultsAsync(Query, lastCatalogResponse, sortBy, cancellationToken);
             
                 if (sortDirection is SortDirection.Descending)
                 {
                     // The only way to sort results in the descending order is to send the same request again 
-                    lastCatalogResponse = await SortSearchResults(Query, lastCatalogResponse, sortBy);
+                    lastCatalogResponse = await SortSearchResultsAsync(Query, lastCatalogResponse, sortBy, cancellationToken);
                 }
             }
             
@@ -152,7 +154,8 @@ namespace Poushec.UpdateCatalogParser
         public async Task<CatalogResponse> GetFirstPageFromSearchQueryAsync(
             string Query, 
             SortBy sortBy = SortBy.None, 
-            SortDirection sortDirection = SortDirection.Descending
+            SortDirection sortDirection = SortDirection.Descending,
+            CancellationToken cancellationToken = default
         )
         {
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
@@ -170,7 +173,7 @@ namespace Poushec.UpdateCatalogParser
 
                 try
                 {
-                    catalogFirstPage = await SendSearchQueryAsync(searchQueryUrl);
+                    catalogFirstPage = await InternalSendSearchQueryAsync(searchQueryUrl, cancellationToken);
                 }
                 catch (TaskCanceledException)
                 {
@@ -190,12 +193,12 @@ namespace Poushec.UpdateCatalogParser
             if (sortBy != SortBy.None)
             {
                 // This will sort results in the ascending order
-                catalogFirstPage = await SortSearchResults(Query, catalogFirstPage, sortBy);
+                catalogFirstPage = await SortSearchResultsAsync(Query, catalogFirstPage, sortBy);
             
                 if (sortDirection is SortDirection.Descending)
                 {
                     // The only way to sort results in the descending order is to send the same request again 
-                    catalogFirstPage = await SortSearchResults(Query, catalogFirstPage, sortBy);
+                    catalogFirstPage = await SortSearchResultsAsync(Query, catalogFirstPage, sortBy);
                 }
             }
 
@@ -207,7 +210,7 @@ namespace Poushec.UpdateCatalogParser
         /// on a final page - <see cref="CatalogNoResultsException"/> will be thrown
         /// </summary>
         /// <returns><see cref="CatalogResponse"/> object representing search query results from the next page</returns>
-        public async Task<CatalogResponse> ParseNextPageAsync(CatalogResponse currentPage)
+        public async Task<CatalogResponse> ParseNextPageAsync(CatalogResponse currentPage, CancellationToken cancellationToken = default)
         {
             if (currentPage.FinalPage)
             {
@@ -225,7 +228,7 @@ namespace Poushec.UpdateCatalogParser
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(currentPage._searchQueryUri, requestContent);
+            HttpResponseMessage response = await _client.PostAsync(currentPage._searchQueryUri, requestContent, cancellationToken);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
@@ -240,11 +243,11 @@ namespace Poushec.UpdateCatalogParser
         /// </summary>
         /// <param name="searchResult">CatalogSearchResult from search query</param>
         /// <returns>Null if request was unsuccessful or <see cref="UpdateInfo"/> object with all collected details</returns>
-        public async Task<UpdateInfo> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
+        public async Task<UpdateInfo> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult, CancellationToken cancellationToken = default)
         {
             try
             {
-                var update = await GetUpdateDetailsAsync(searchResult);
+                var update = await GetUpdateDetailsAsync(searchResult, cancellationToken);
                 return update;
             }
             catch
@@ -263,7 +266,7 @@ namespace Poushec.UpdateCatalogParser
         /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
         /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
         /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
-        public async Task<UpdateInfo> GetUpdateDetailsAsync(CatalogSearchResult searchResult)
+        public async Task<UpdateInfo> GetUpdateDetailsAsync(CatalogSearchResult searchResult, CancellationToken cancellationToken = default)
         {
             HtmlDocument detailsPage;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
@@ -272,7 +275,7 @@ namespace Poushec.UpdateCatalogParser
             {
                 try 
                 {
-                    detailsPage = await _catalogParser.LoadDetailsPageAsync(searchResult.UpdateID);
+                    detailsPage = await _catalogParser.LoadDetailsPageAsync(searchResult.UpdateID, cancellationToken);
                     break;
                 }
                 catch (Exception ex)
@@ -288,7 +291,7 @@ namespace Poushec.UpdateCatalogParser
 
             UpdateInfo updateBase = _catalogParser.CollectUpdateInfoFromDetailsPage(searchResult, detailsPage);
 
-            IEnumerable<string> patchDownloadLinks = await _catalogParser.GetDownloadLinksAsync(searchResult.UpdateID);
+            IEnumerable<string> patchDownloadLinks = await _catalogParser.GetDownloadLinksAsync(searchResult.UpdateID, cancellationToken);
             updateBase.DownloadLinks.AddRange(patchDownloadLinks);
 
             if (updateBase.Classification.Contains("Driver"))
@@ -303,7 +306,12 @@ namespace Poushec.UpdateCatalogParser
             return updateBase;
         }
         
-        private async Task<CatalogResponse> SortSearchResults(string searchQuery, CatalogResponse unsortedResponse, SortBy sortBy)
+        private async Task<CatalogResponse> SortSearchResultsAsync(
+            string searchQuery, 
+            CatalogResponse unsortedResponse, 
+            SortBy sortBy, 
+            CancellationToken cancellationToken = default
+        )
         {
             string eventTarget = "ctl00$catalogBody$updateMatches$ctl02$";
 
@@ -329,7 +337,7 @@ namespace Poushec.UpdateCatalogParser
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(unsortedResponse._searchQueryUri, requestContent);
+            HttpResponseMessage response = await _client.PostAsync(unsortedResponse._searchQueryUri, requestContent, cancellationToken);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
@@ -338,9 +346,9 @@ namespace Poushec.UpdateCatalogParser
             return _catalogParser.ParseSearchResultsPage(HtmlDoc, unsortedResponse._searchQueryUri);
         }
 
-        private async Task<CatalogResponse> SendSearchQueryAsync(string requestUri)
+        private async Task<CatalogResponse> InternalSendSearchQueryAsync(string requestUri, CancellationToken cancellationToken)
         {
-            HttpResponseMessage response = await _client.GetAsync(requestUri);
+            HttpResponseMessage response = await _client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
