@@ -59,9 +59,9 @@ namespace UpdateCatalogParser.Tests
         }
 
         [Trait("Catalog Search", "Tests for Catalog Search queries")]
-        [Theory(DisplayName = "GetUpdateDetailsAsync method returns correct results")]
-        [InlineData("fb8507ea-3f51-47d7-a2dc-3716d0506c56")]
-        public async Task Get_Update_Details_Method_Works_Returns_Correct_Results(string updateId)
+        [Theory(DisplayName = "GetUpdateDetailsAsync method returns correct results for Update")]
+        [InlineData("7b3ed3ca-5220-4325-b034-cedc5cb51253")]
+        public async Task Get_Update_Details_Method_Returns_Correct_Results_For_Update(string updateId)
         {
             var catalogClient = new CatalogClient();
             List<CatalogSearchResult> searchResults = await catalogClient.SendSearchQueryAsync(updateId);
@@ -72,7 +72,35 @@ namespace UpdateCatalogParser.Tests
             UpdateInfo updateDetails = await catalogClient.GetUpdateDetailsAsync(searchResults[0]);
             
             Assert.NotNull(updateDetails);
+            Assert.NotNull(updateDetails.AdditionalProperties);
+
             Assert.NotEmpty(updateDetails.DownloadLinks);
+            Assert.NotEmpty(updateDetails.AdditionalProperties.SupersededBy);
+            Assert.NotEmpty(updateDetails.AdditionalProperties.Supersedes);
+
+            bool allLinksAreNotEmpty = updateDetails.DownloadLinks.TrueForAll(link => !string.IsNullOrEmpty(link));
+
+            Assert.True(allLinksAreNotEmpty);
+        }
+
+        [Trait("Catalog Search", "Tests for Catalog Search queries")]
+        [Theory(DisplayName = "GetUpdateDetailsAsync method returns correct results for Driver")]
+        [InlineData("97f6087b-1190-4e0f-9234-352bcbf520ad")]
+        public async Task Get_Update_Details_Method_Returns_Correct_Results_For_Driver(string updateId)
+        {
+            var catalogClient = new CatalogClient();
+            List<CatalogSearchResult> searchResults = await catalogClient.SendSearchQueryAsync(updateId);
+
+            Assert.NotNull(searchResults);
+            Assert.NotEmpty(searchResults);
+
+            UpdateInfo updateDetails = await catalogClient.GetUpdateDetailsAsync(searchResults[0]);
+            
+            Assert.NotNull(updateDetails);
+            Assert.NotNull(updateDetails.DriverProperties);
+
+            Assert.NotEmpty(updateDetails.DownloadLinks);
+            Assert.NotEmpty(updateDetails.DriverProperties.HardwareIDs);
 
             bool allLinksAreNotEmpty = updateDetails.DownloadLinks.TrueForAll(link => !string.IsNullOrEmpty(link));
 

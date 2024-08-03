@@ -293,7 +293,7 @@ namespace Poushec.UpdateCatalogParser
 
             if (updateBase.Classification.Contains("Driver"))
             {
-                updateBase.DriverInfo = _catalogParser.CollectDriverProperties(detailsPage);
+                updateBase.DriverProperties = _catalogParser.CollectDriverProperties(detailsPage);
             }
             else
             {

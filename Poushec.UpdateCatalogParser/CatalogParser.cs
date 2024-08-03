@@ -38,13 +38,13 @@ namespace Poushec.UpdateCatalogParser
                 .Select(lang => lang.Trim())
                 .ToList();
 
-            update.MoreInformation = _urlRegex.Matches(detailsPage.GetElementbyId("moreInfoDiv").InnerHtml)
+            update.MoreInformationLinks = _urlRegex.Matches(detailsPage.GetElementbyId("moreInfoDiv").InnerHtml)
                 .Select(match => match.Value)
                 .Distinct()
                 .ToList();
 
             // I didn't spell it wrong - this div is literally called suportUrlDiv :)
-            update.SupportUrl = _urlRegex.Matches(detailsPage.GetElementbyId("suportUrlDiv").InnerHtml)
+            update.SupportUrls = _urlRegex.Matches(detailsPage.GetElementbyId("suportUrlDiv").InnerHtml)
                 .Select(match => match.Value)
                 .Distinct()
                 .ToList();
