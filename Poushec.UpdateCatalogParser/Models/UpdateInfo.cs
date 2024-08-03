@@ -35,7 +35,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public List<string> DownloadLinks { get; set; } = new List<string>();
         
         //Additional classification-specific info
-        public AdditionalProperties UpdateInfo { get; set; }
+        public AdditionalProperties AdditionalProperties { get; set; }
         public DriverProperties DriverInfo { get; set; }
         
         internal UpdateInfo() { }

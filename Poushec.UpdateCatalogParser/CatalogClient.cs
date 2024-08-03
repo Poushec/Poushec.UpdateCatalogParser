@@ -291,26 +291,14 @@ namespace Poushec.UpdateCatalogParser
 
             if (updateBase.Classification.Contains("Driver"))
             {
-                var driverUpdate = new DriverProperties(updateBase);
-
-                return driverUpdate;
+                updateBase.DriverInfo = _catalogParser.CollectDriverProperties(detailsPage);
             }
-
-            switch (updateBase.Classification)
+            else
             {
-                case "Security Updates":
-                case "Critical Updates":
-                case "Definition Updates":
-                case "Feature Packs": 
-                case "Service Packs":
-                case "Update Rollups":
-                case "Updates": 
-                case "Hotfix":
-                    var update = new AdditionalProperties(updateBase);
-                    return update;
-
-                default: throw new NotImplementedException();
+                updateBase.AdditionalProperties = _catalogParser.CollectAdditionalUpdateProperties(detailsPage);
             }
+
+            return updateBase;
         }
         
         private async Task<CatalogResponse> SortSearchResults(string searchQuery, CatalogResponse unsortedResponse, SortBy sortBy)

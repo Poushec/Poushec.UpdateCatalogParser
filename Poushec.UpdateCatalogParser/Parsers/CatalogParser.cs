@@ -211,7 +211,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             return new CatalogSearchResult(title, products, classification, lastUpdated, version, size, sizeInBytes, updateID);
         }
 
-        private DriverProperties ParseDriverProperties(HtmlDocument detailsPage)
+        public DriverProperties CollectDriverProperties(HtmlDocument detailsPage)
         {
             var driverProperties = new DriverProperties();
 
