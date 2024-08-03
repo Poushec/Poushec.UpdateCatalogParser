@@ -264,5 +264,73 @@ namespace Poushec.UpdateCatalogParser.Parsers
             
             return hwIds;
         }
+
+        public AdditionalProperties CollectAdditionalUpdateProperties(HtmlDocument detailsPage)
+        {
+            AdditionalProperties additionalProperties = new AdditionalProperties();
+
+            try
+            {
+                additionalProperties.MSRCNumber = detailsPage.GetElementbyId("securityBullitenDiv").LastChild.InnerText.Trim();
+                additionalProperties.MSRCSeverity = detailsPage.GetElementbyId("ScopedViewHandler_msrcSeverity").InnerText;
+                additionalProperties.KBArticleNumbers = detailsPage.GetElementbyId("kbDiv").LastChild.InnerText.Trim();
+                additionalProperties.SupersededBy = CollectSupersededByList(detailsPage);
+                additionalProperties.Supersedes = CollectSupersedesList(detailsPage);
+            }
+            catch (Exception ex)
+            {
+                throw new ParseHtmlPageException("Failed to parse Update details", ex);
+            }
+
+            return additionalProperties;
+        }
+
+        private List<string> CollectSupersededByList(HtmlDocument detailsPage)
+        {
+            var supersededByDivs = detailsPage.GetElementbyId("supersededbyInfo");
+            var supersededBy = new List<string>();
+
+            // If first child isn't a div - than it's just a n/a and there's nothing to gather
+            if (supersededByDivs.FirstChild.InnerText.Trim() == "n/a")
+            {
+                return supersededBy;
+            }
+
+            supersededByDivs.ChildNodes
+                .Where(node => node.Name == "div")
+                .ToList()
+                .ForEach(node =>
+                {
+                    var updateId = node.ChildNodes[1]
+                        .GetAttributeValue("href", "")
+                        .Replace("ScopedViewInline.aspx?updateid=", "");
+                    
+                    supersededBy.Add(updateId);
+                });
+
+            return supersededBy;
+        }
+
+        private List<string> CollectSupersedesList(HtmlDocument detailsPage)
+        {
+            var supersedesDivs = detailsPage.GetElementbyId("supersedesInfo");
+            var supersedes = new List<string>();
+
+            // If first child isn't a div - than it's just a n/a and there's nothing to gather
+            if (supersedesDivs.FirstChild.InnerText.Trim() == "n/a")
+            {
+                return supersedes;
+            }
+            
+            supersedesDivs.ChildNodes
+                .Where(node => node.Name == "div")
+                .ToList()
+                .ForEach(node =>
+                {
+                    supersedes.Add(node.InnerText.Trim());
+                });
+
+            return supersedes;
+        }
     }
 }
