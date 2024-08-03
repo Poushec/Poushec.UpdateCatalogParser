@@ -8,7 +8,6 @@ using Poushec.UpdateCatalogParser.Models;
 using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
 using Poushec.UpdateCatalogParser.Extensions;
-using Poushec.UpdateCatalogParser.Parsers;
 
 namespace Poushec.UpdateCatalogParser
 {

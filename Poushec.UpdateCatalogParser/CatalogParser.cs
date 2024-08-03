@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Poushec.UpdateCatalogParser.Parsers
+namespace Poushec.UpdateCatalogParser
 {
     internal class CatalogParser
     {
@@ -19,11 +19,11 @@ namespace Poushec.UpdateCatalogParser.Parsers
 
         private readonly HttpClient _httpClient;
 
-        public CatalogParser(HttpClient httpClient) 
+        public CatalogParser(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
-        
+
         public UpdateInfo CollectUpdateInfoFromDetailsPage(CatalogSearchResult searchResult, HtmlDocument detailsPage)
         {
             var update = new UpdateInfo(searchResult);
@@ -66,14 +66,14 @@ namespace Poushec.UpdateCatalogParser.Parsers
                     .ChildNodes[3]
                     .InnerText.Trim();
             }
-                
+
             update.UninstallSteps = detailsPage.GetElementbyId("uninstallStepsDiv")
                 .LastChild
                 .InnerText.Trim();
 
             return update;
         }
-        
+
         public async Task<HtmlDocument> LoadDetailsPageAsync(string updateId)
         {
             string detailsPageUri = $"https://www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid={updateId}";
@@ -98,7 +98,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
                 HtmlDocument htmlDocument = new HtmlDocument();
                 htmlDocument.Load(responseStream);
 
-                var errorDiv = htmlDocument.GetElementbyId("errorPageDisplayedError"); 
+                var errorDiv = htmlDocument.GetElementbyId("errorPageDisplayedError");
 
                 if (errorDiv != null)
                 {
@@ -126,7 +126,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
         {
             var downloadPageUri = "https://www.catalog.update.microsoft.com/DownloadDialog.aspx";
 
-            var requestBody = JsonSerializer.Serialize(new { size = 0, languages = "", uidInfo = updateId, updateId = updateId });
+            var requestBody = JsonSerializer.Serialize(new { size = 0, languages = "", uidInfo = updateId, updateId });
             var requestPayload = $"[{requestBody}]";
 
             var requestContent = new MultipartFormDataContent
@@ -142,7 +142,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             }
             catch (TaskCanceledException)
             {
-                throw new RequestToCatalogTimedOutException(); 
+                throw new RequestToCatalogTimedOutException();
             }
 
             response.EnsureSuccessStatusCode();
@@ -160,7 +160,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
 
         public CatalogResponse ParseSearchResultsPage(HtmlDocument htmlDoc, string searchQueryUri)
         {
-            string eventArgument = htmlDoc.GetElementbyId("__EVENTARGUMENT")?.FirstChild?.Attributes["value"]?.Value ?? String.Empty;
+            string eventArgument = htmlDoc.GetElementbyId("__EVENTARGUMENT")?.FirstChild?.Attributes["value"]?.Value ?? string.Empty;
             string eventValidation = htmlDoc.GetElementbyId("__EVENTVALIDATION").GetAttributes().Where(att => att.Name == "value").First().Value;
             string viewState = htmlDoc.GetElementbyId("__VIEWSTATE").GetAttributes().Where(att => att.Name == "value").First().Value;
             string viewStateGenerator = htmlDoc.GetElementbyId("__VIEWSTATEGENERATOR").GetAttributes().Where(att => att.Name == "value").First().Value;
@@ -184,13 +184,13 @@ namespace Poushec.UpdateCatalogParser.Parsers
                 .ToList();
 
             return new CatalogResponse(
-                searchQueryUri, 
-                searchResults, 
-                eventArgument, 
-                eventValidation, 
-                viewState, 
-                viewStateGenerator, 
-                finalPage, 
+                searchQueryUri,
+                searchResults,
+                eventArgument,
+                eventValidation,
+                viewState,
+                viewStateGenerator,
+                finalPage,
                 resultsCount
             );
         }
@@ -198,7 +198,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
         public CatalogSearchResult ParseResultsTableRow(HtmlNode resultsRow)
         {
             HtmlNodeCollection rowCells = resultsRow.SelectNodes("td");
-            
+
             string title = rowCells[1].InnerText.Trim();
             string products = rowCells[2].InnerText.Trim();
             string classification = rowCells[3].InnerText.Trim();
@@ -248,20 +248,20 @@ namespace Poushec.UpdateCatalogParser.Parsers
             hwIdsDivs.ChildNodes
                 .Where(node => node.Name == "div")
                 .ToList()
-                .ForEach(node => 
+                .ForEach(node =>
                 {
                     var hid = node.ChildNodes
                         .First().InnerText
                         .Trim()
                         .Replace(@"\r\n", "")
                         .ToUpper();
-                    
-                    if (!String.IsNullOrEmpty(hid))
+
+                    if (!string.IsNullOrEmpty(hid))
                     {
                         hwIds.Add(hid);
                     }
                 });
-            
+
             return hwIds;
         }
 
@@ -304,7 +304,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
                     var updateId = node.ChildNodes[1]
                         .GetAttributeValue("href", "")
                         .Replace("ScopedViewInline.aspx?updateid=", "");
-                    
+
                     supersededBy.Add(updateId);
                 });
 
@@ -321,7 +321,7 @@ namespace Poushec.UpdateCatalogParser.Parsers
             {
                 return supersedes;
             }
-            
+
             supersedesDivs.ChildNodes
                 .Where(node => node.Name == "div")
                 .ToList()
