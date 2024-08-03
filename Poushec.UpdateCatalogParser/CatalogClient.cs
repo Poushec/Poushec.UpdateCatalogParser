@@ -241,7 +241,7 @@ namespace Poushec.UpdateCatalogParser
         /// </summary>
         /// <param name="searchResult">CatalogSearchResult from search query</param>
         /// <returns>Null is request was unsuccessful or UpdateBase (Driver/Update) object with all collected details</returns>
-        public async Task<UpdateBase> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
+        public async Task<UpdateInfo> TryGetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
             try
             {
@@ -264,7 +264,7 @@ namespace Poushec.UpdateCatalogParser
         /// <exception cref="CatalogErrorException">Thrown when catalog response with an error page with unknown error code</exception>
         /// <exception cref="RequestToCatalogTimedOutException">Thrown when request to catalog was canceled due to timeout</exception>
         /// <exception cref="ParseHtmlPageException">Thrown when function was not able to parse ScopedView HTML page</exception>
-        public async Task<UpdateBase> GetUpdateDetailsAsync(CatalogSearchResult searchResult)
+        public async Task<UpdateInfo> GetUpdateDetailsAsync(CatalogSearchResult searchResult)
         {
             HtmlDocument detailsPage;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
@@ -287,7 +287,7 @@ namespace Poushec.UpdateCatalogParser
                 }
             }
 
-            UpdateBase updateBase = _catalogParser.CollectUpdateInfoFromDetailsPage(searchResult, detailsPage);
+            UpdateInfo updateBase = _catalogParser.CollectUpdateInfoFromDetailsPage(searchResult, detailsPage);
 
             if (updateBase.Classification.Contains("Driver"))
             {

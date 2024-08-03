@@ -69,7 +69,7 @@ namespace UpdateCatalogParser.Tests
             Assert.NotNull(searchResults);
             Assert.NotEmpty(searchResults);
 
-            UpdateBase updateDetails = await catalogClient.GetUpdateDetailsAsync(searchResults[0]);
+            UpdateInfo updateDetails = await catalogClient.GetUpdateDetailsAsync(searchResults[0]);
             
             Assert.NotNull(updateDetails);
             Assert.NotEmpty(updateDetails.DownloadLinks);

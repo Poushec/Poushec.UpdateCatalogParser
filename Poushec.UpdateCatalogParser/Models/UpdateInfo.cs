@@ -7,7 +7,7 @@ namespace Poushec.UpdateCatalogParser.Models
     /// <summary>
     /// Class represents the shared content of Update Details page of any Update type (classification)
     /// </summary>
-    public class UpdateBase
+    public class UpdateInfo
     {
         // Info from search results
         public string Title { get; set; }
@@ -18,7 +18,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public string Size { get; set; }
         public int SizeInBytes { get; set; }
 
-        // Info from details page
+        // Common info from details page
         public string Description { get; set; } = String.Empty;
         public List<string> Architectures { get; set; } = new List<string>();
         public List<string> SupportedLanguages { get; set; } = new List<string>();
@@ -38,9 +38,9 @@ namespace Poushec.UpdateCatalogParser.Models
         public AdditionalProperties UpdateInfo { get; set; }
         public DriverProperties DriverInfo { get; set; }
         
-        internal UpdateBase() { }
+        internal UpdateInfo() { }
 
-        internal UpdateBase(CatalogSearchResult resultRow) 
+        internal UpdateInfo(CatalogSearchResult resultRow) 
         {
             this.UpdateID = resultRow.UpdateID;
             this.Title = resultRow.Title;

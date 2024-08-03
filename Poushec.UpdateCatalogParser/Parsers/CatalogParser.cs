@@ -24,9 +24,9 @@ namespace Poushec.UpdateCatalogParser.Parsers
             _httpClient = httpClient;
         }
         
-        public UpdateBase CollectUpdateInfoFromDetailsPage(CatalogSearchResult searchResult, HtmlDocument detailsPage)
+        public UpdateInfo CollectUpdateInfoFromDetailsPage(CatalogSearchResult searchResult, HtmlDocument detailsPage)
         {
-            var update = new UpdateBase(searchResult);
+            var update = new UpdateInfo(searchResult);
 
             update.Architectures = detailsPage.GetElementbyId("archDiv").LastChild.InnerText
                 .Split(',')
