@@ -4,6 +4,7 @@ using Poushec.UpdateCatalogParser.Extensions;
 using Poushec.UpdateCatalogParser.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -19,10 +20,12 @@ namespace Poushec.UpdateCatalogParser
         private readonly Regex _downloadLinkRegex = new Regex(@"(http[s]?\://dl\.delivery\.mp\.microsoft\.com\/[^\'\""]*)|(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)|(http[s]://catalog\.s\.download\.windowsupdate\.com.*?(?=\'))");
 
         private readonly HttpClient _httpClient;
+        private readonly CultureInfo _cultureInfo;
 
-        public CatalogParser(HttpClient httpClient)
+        public CatalogParser(HttpClient httpClient, CultureInfo cultureInfo)
         {
             _httpClient = httpClient;
+            _cultureInfo = cultureInfo;
         }
 
         public UpdateInfo CollectUpdateInfoFromDetailsPage(CatalogSearchResult searchResult, HtmlDocument detailsPage)
@@ -204,7 +207,7 @@ namespace Poushec.UpdateCatalogParser
             string title = rowCells[1].InnerText.Trim();
             string products = rowCells[2].InnerText.Trim();
             string classification = rowCells[3].InnerText.Trim();
-            DateTime lastUpdated = DateTime.Parse(rowCells[4].InnerText.Trim());
+            DateTime lastUpdated = DateTime.Parse(rowCells[4].InnerText.Trim(), _cultureInfo);
             string version = rowCells[5].InnerText.Trim();
             string size = rowCells[6].SelectNodes("span")[0].InnerText;
             int sizeInBytes = int.Parse(rowCells[6].SelectNodes("span")[1].InnerHtml);
@@ -226,7 +229,7 @@ namespace Poushec.UpdateCatalogParser
                 driverProperties.DriverModel = detailsPage.GetElementbyId("ScopedViewHandler_driverModel").InnerText;
                 driverProperties.DriverProvider = detailsPage.GetElementbyId("ScopedViewHandler_driverProvider").InnerText;
                 driverProperties.DriverVersion = detailsPage.GetElementbyId("ScopedViewHandler_version").InnerText;
-                driverProperties.VersionDate = DateTime.Parse(detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
+                driverProperties.VersionDate = DateTime.Parse(detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText, _cultureInfo);
             }
             catch (Exception ex)
             {

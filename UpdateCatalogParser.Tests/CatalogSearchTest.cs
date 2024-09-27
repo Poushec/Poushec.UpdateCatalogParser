@@ -106,5 +106,18 @@ namespace UpdateCatalogParser.Tests
 
             Assert.True(allLinksAreNotEmpty);
         }
+
+        [Trait("Catalog Search", "Tests for Catalog Search queries")]
+        [Theory(DisplayName = "SendSearchQueryAsync throws a FormatException with incorrect CultureInfo")]
+        [InlineData("97f6087b-1190-4e0f-9234-352bcbf520ad")]
+        public async Task Throws_FormatException_With_Incorrect_CultureInfo(string updateId)
+        {
+            var catalogClient = new CatalogClient(new System.Globalization.CultureInfo("uk-UA"));
+
+            await Assert.ThrowsAsync<System.FormatException>(async () =>
+            {
+                await catalogClient.SendSearchQueryAsync(updateId);
+            });
+        }
     }
 }

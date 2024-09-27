@@ -9,6 +9,7 @@ using Poushec.UpdateCatalogParser.Exceptions;
 using static System.Web.HttpUtility;
 using Poushec.UpdateCatalogParser.Extensions;
 using System.Threading;
+using System.Globalization;
 
 namespace Poushec.UpdateCatalogParser
 {
@@ -21,13 +22,43 @@ namespace Poushec.UpdateCatalogParser
         private HttpClient _client;
         private CatalogParser _catalogParser;
 
-        public CatalogClient(byte pageReloadAttemptsAllowed = 3) : this(new HttpClient(), pageReloadAttemptsAllowed) { }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CatalogClient"/> class using the specified <see cref="CultureInfo"/>.
+        /// </summary>
+        /// <param name="cultureInfo">The culture information to use for parsing catalog Dates.</param>
+        /// <remarks>
+        /// This constructor creates a new instance of <see cref="HttpClient"/> internally and initializes the <see cref="CatalogClient"/>
+        /// with the provided culture information.
+        /// The default page reload attempts is 3.
+        /// </remarks>
+        public CatalogClient(CultureInfo cultureInfo) : this(new HttpClient(), cultureInfo) { }
 
-        public CatalogClient(HttpClient client, byte pageReloadAttemptsAllowed = 3)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CatalogClient"/> class with a default culture ("en-US")
+        /// and a specified number of allowed page reload attempts.
+        /// </summary>
+        /// <param name="pageReloadAttemptsAllowed">The number of page reload attempts allowed. Default is 3.</param>
+        /// <remarks>
+        /// This constructor creates a new instance of <see cref="HttpClient"/> and uses a default culture of "en-US".
+        /// It also allows you to specify the maximum number of page reload attempts allowed.
+        /// </remarks>
+        public CatalogClient(byte pageReloadAttemptsAllowed = 3) : this(new HttpClient(), new CultureInfo("en-US"), pageReloadAttemptsAllowed) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CatalogClient"/> class with the specified <see cref="HttpClient"/>, <see cref="CultureInfo"/>,
+        /// and allowed page reload attempts.
+        /// </summary>
+        /// <param name="client">An instance of <see cref="HttpClient"/> to be used for making HTTP requests.</param>
+        /// <param name="cultureInfo">The culture information to use for parsing catalog data.</param>
+        /// <param name="pageReloadAttemptsAllowed">The number of page reload attempts allowed. Default is 3.</param>
+        /// <remarks>
+        /// This constructor allows full control over the HTTP client used for requests, the culture settings, and the number of page reload attempts allowed.
+        /// </remarks>
+        public CatalogClient(HttpClient client, CultureInfo cultureInfo, byte pageReloadAttemptsAllowed = 3)
         {
             _client = client;
             _pageReloadAttempts = pageReloadAttemptsAllowed;
-            _catalogParser = new CatalogParser(client);
+            _catalogParser = new CatalogParser(client, cultureInfo);
         }
         
         /// <summary>
