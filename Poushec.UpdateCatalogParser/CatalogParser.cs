@@ -229,7 +229,7 @@ namespace Poushec.UpdateCatalogParser
                 driverProperties.DriverModel = detailsPage.GetElementbyId("ScopedViewHandler_driverModel").InnerText;
                 driverProperties.DriverProvider = detailsPage.GetElementbyId("ScopedViewHandler_driverProvider").InnerText;
                 driverProperties.DriverVersion = detailsPage.GetElementbyId("ScopedViewHandler_version").InnerText;
-                driverProperties.VersionDate = DateTime.Parse(detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText);
+                driverProperties.VersionDate = DateTime.Parse(detailsPage.GetElementbyId("ScopedViewHandler_versionDate").InnerText, _cultureInfo);
             }
             catch (Exception ex)
             {
