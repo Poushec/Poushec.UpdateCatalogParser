@@ -119,5 +119,50 @@ namespace UpdateCatalogParser.Tests
                 await catalogClient.SendSearchQueryAsync(updateId);
             });
         }
+        
+
+        [Trait("Catalog Search", "Tests for Catalog Search queries")]
+        [Theory(DisplayName = "Download Links are being parsed correctly (catalog.s.download)")]
+        [InlineData("6dfce7b5-4ca2-4ebd-ae75-14918abb529d")]
+        public async Task Download_Links_Are_Being_Parsed_Correctly_Format_1(string updateId)
+        {
+            var catalogClient = new CatalogClient();
+            List<CatalogSearchResult> searchResults = await catalogClient.SendSearchQueryAsync(updateId);
+
+            Assert.NotNull(searchResults);
+            Assert.NotEmpty(searchResults);
+
+            UpdateInfo updateDetails = await catalogClient.GetUpdateDetailsAsync(searchResults[0]);
+            
+            Assert.NotNull(updateDetails);
+
+            Assert.NotEmpty(updateDetails.DownloadLinks);
+            bool allLinksAreNotEmpty = updateDetails.DownloadLinks.TrueForAll(link => !string.IsNullOrEmpty(link));
+
+            Assert.True(allLinksAreNotEmpty);
+            Assert.True(updateDetails.DownloadLinks.Count == 2, "Incorrect download links count");
+        }
+
+        [Trait("Catalog Search", "Tests for Catalog Search queries")]
+        [Theory(DisplayName = "Download Links are being parsed correctly (catalog.sf.dl.download)")]
+        [InlineData("3bdcfcf3-26a6-49da-8129-f1e293f9a634")]
+        public async Task Download_Links_Are_Being_Parsed_Correctly_Format_2(string updateId)
+        {
+            var catalogClient = new CatalogClient();
+            List<CatalogSearchResult> searchResults = await catalogClient.SendSearchQueryAsync(updateId);
+
+            Assert.NotNull(searchResults);
+            Assert.NotEmpty(searchResults);
+
+            UpdateInfo updateDetails = await catalogClient.GetUpdateDetailsAsync(searchResults[0]);
+            
+            Assert.NotNull(updateDetails);
+
+            Assert.NotEmpty(updateDetails.DownloadLinks);
+            bool allLinksAreNotEmpty = updateDetails.DownloadLinks.TrueForAll(link => !string.IsNullOrEmpty(link));
+
+            Assert.True(allLinksAreNotEmpty);
+            Assert.True(updateDetails.DownloadLinks.Count == 1, "Incorrect download links count");
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace Poushec.UpdateCatalogParser
     internal class CatalogParser
     {
         private readonly Regex _urlRegex = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)");
-        private readonly Regex _downloadLinkRegex = new Regex(@"(http[s]?\://dl\.delivery\.mp\.microsoft\.com\/[^\'\""]*)|(http[s]?\://download\.windowsupdate\.com\/[^\'\""]*)|(http[s]://catalog\.s\.download\.windowsupdate\.com.*?(?=\'))");
+        private readonly Regex _downloadLinkRegex = new Regex(@"https?:\/\/.*?(?='|"";)");
 
         private readonly HttpClient _httpClient;
         private readonly CultureInfo _cultureInfo;
