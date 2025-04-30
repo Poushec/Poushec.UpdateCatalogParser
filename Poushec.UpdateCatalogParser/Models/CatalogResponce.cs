@@ -12,10 +12,11 @@ namespace Poushec.UpdateCatalogParser.Models
         internal string ViewStateGenerator;
 
         internal int TotalPages => (int)Math.Ceiling((double)ResultsCount / 25);
+        internal readonly int CurrentPage;
 
-        public readonly bool FinalPage;
+        public bool FinalPage => CurrentPage == TotalPages;
         public List<CatalogSearchResult> SearchResults;
-        public int ResultsCount;
+        public int ResultsCount => SearchResults.Count;
 
         internal CatalogResponse(
             string searchQueryUri,
@@ -24,8 +25,7 @@ namespace Poushec.UpdateCatalogParser.Models
             string eventValidation,
             string viewState,
             string viewStateGenerator,
-            bool finalPage,
-            int resultsCount
+            int currentPage
         ) 
         {
             SearchQueryUri = searchQueryUri;
@@ -35,9 +35,7 @@ namespace Poushec.UpdateCatalogParser.Models
             this.EventValidation = eventValidation;
             this.ViewState = viewState;
             this.ViewStateGenerator = viewStateGenerator;
-            this.FinalPage = finalPage;
-
-            this.ResultsCount = resultsCount;
+            this.CurrentPage = currentPage;
         }
     }
 }
