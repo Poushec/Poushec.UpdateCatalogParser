@@ -6,35 +6,26 @@ namespace Poushec.UpdateCatalogParser.Models
     public class CatalogResponse
     {
         internal string SearchQueryUri;
-        internal string EventArgument;
-        internal string EventValidation;
-        internal string ViewState;
-        internal string ViewStateGenerator;
 
-        internal int TotalPages => (int)Math.Ceiling((double)ResultsCount / 25);
+        internal int TotalPages => (int)Math.Ceiling((double)ResultsCount / 25) - 1; 
         internal readonly int CurrentPage;
+        internal string SortQuery = string.Empty; 
 
         public bool FinalPage => CurrentPage == TotalPages;
         public List<CatalogSearchResult> SearchResults;
-        public int ResultsCount => SearchResults.Count;
+        public readonly int ResultsCount;
 
         internal CatalogResponse(
             string searchQueryUri,
             List<CatalogSearchResult> searchResults, 
-            string eventArgument, 
-            string eventValidation,
-            string viewState,
-            string viewStateGenerator,
+            int resultsCount,
             int currentPage
         ) 
         {
             SearchQueryUri = searchQueryUri;
 
             this.SearchResults = searchResults;
-            this.EventArgument = eventArgument;
-            this.EventValidation = eventValidation;
-            this.ViewState = viewState;
-            this.ViewStateGenerator = viewStateGenerator;
+            this.ResultsCount = resultsCount;
             this.CurrentPage = currentPage;
         }
     }

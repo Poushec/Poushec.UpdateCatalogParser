@@ -60,7 +60,7 @@ namespace Poushec.UpdateCatalogParser
             _pageReloadAttempts = pageReloadAttemptsAllowed;
             _catalogParser = new CatalogParser(client, cultureInfo);
         }
-        
+
         /// <summary>
         /// Sends search query to <see href="https://catalog.update.microsoft.com">catalog.update.microsoft.com</see>
         /// </summary>
@@ -73,19 +73,21 @@ namespace Poushec.UpdateCatalogParser
         /// <param name="sortDirection">(Optional) Sets the sort direction</param>
         /// <returns><see cref="CatalogSearchResult"/> list representing the search results</returns>
         public async Task<List<CatalogSearchResult>> SendSearchQueryAsync(
-            string Query, 
-            bool ignoreDuplicates = false, 
-            SortBy sortBy = SortBy.None, 
+            string Query,
+            bool ignoreDuplicates = false,
+            SortBy sortBy = SortBy.None,
             SortDirection sortDirection = SortDirection.Descending,
             CancellationToken cancellationToken = default
         )
         {
+            string sortQuery = ConstructSortQuery(sortBy, sortDirection);
+
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
-            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}");
+            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}{sortQuery}");
 
             CatalogResponse lastCatalogResponse = null;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
-            
+
             while (lastCatalogResponse is null)
             {
                 if (pageReloadAttemptsLeft == 0)
@@ -117,18 +119,20 @@ namespace Poushec.UpdateCatalogParser
                 }
             }
 
-            if (sortBy != SortBy.None)
-            {
-                // This will sort results in the ascending order
-                lastCatalogResponse = await SortSearchResultsAsync(Query, lastCatalogResponse, sortBy, cancellationToken);
-            
-                if (sortDirection is SortDirection.Descending)
-                {
-                    // The only way to sort results in the descending order is to send the same request again 
-                    lastCatalogResponse = await SortSearchResultsAsync(Query, lastCatalogResponse, sortBy, cancellationToken);
-                }
-            }
-            
+            lastCatalogResponse.SortQuery = sortQuery;
+
+            //if (sortBy != SortBy.None)
+            //{
+            //    // This will sort results in the ascending order
+            //    lastCatalogResponse = await SortSearchResultsAsync(Query, lastCatalogResponse, sortBy, cancellationToken);
+
+            //    if (sortDirection is SortDirection.Descending)
+            //    {
+            //        // The only way to sort results in the descending order is to send the same request again 
+            //        lastCatalogResponse = await SortSearchResultsAsync(Query, lastCatalogResponse, sortBy, cancellationToken);
+            //    }
+            //}
+
             List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
             pageReloadAttemptsLeft = _pageReloadAttempts;
 
@@ -145,7 +149,7 @@ namespace Poushec.UpdateCatalogParser
                     searchResults.AddRange(lastCatalogResponse.SearchResults);
                     pageReloadAttemptsLeft = _pageReloadAttempts; // Reset page refresh attempts count
                 }
-                catch (TaskCanceledException) 
+                catch (TaskCanceledException)
                 {
                     // Request timed out - it happens
                     pageReloadAttemptsLeft--;
@@ -183,18 +187,20 @@ namespace Poushec.UpdateCatalogParser
         /// <param name="sortDirection">Sorting direction. <see cref="SortDirection.Ascending">Ascending</see> or <see cref="SortDirection.Descending">Descending</see></param>
         /// <returns><see cref="CatalogResponse"/> object representing the first results page</returns>
         public async Task<CatalogResponse> GetFirstPageFromSearchQueryAsync(
-            string Query, 
-            SortBy sortBy = SortBy.None, 
+            string Query,
+            SortBy sortBy = SortBy.None,
             SortDirection sortDirection = SortDirection.Descending,
             CancellationToken cancellationToken = default
         )
         {
+            string sortQuery = ConstructSortQuery(sortBy, sortDirection);
+
             string catalogBaseUrl = "https://www.catalog.update.microsoft.com/Search.aspx";
-            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}"); 
-            
+            string searchQueryUrl = String.Format($"{catalogBaseUrl}?q={UrlEncode(Query)}{sortQuery}");
+
             CatalogResponse catalogFirstPage = null;
             byte pageReloadAttemptsLeft = _pageReloadAttempts;
-            
+
             while (catalogFirstPage is null)
             {
                 if (pageReloadAttemptsLeft == 0)
@@ -221,17 +227,19 @@ namespace Poushec.UpdateCatalogParser
                 }
             }
 
-            if (sortBy != SortBy.None)
-            {
-                // This will sort results in the ascending order
-                catalogFirstPage = await SortSearchResultsAsync(Query, catalogFirstPage, sortBy);
-            
-                if (sortDirection is SortDirection.Descending)
-                {
-                    // The only way to sort results in the descending order is to send the same request again 
-                    catalogFirstPage = await SortSearchResultsAsync(Query, catalogFirstPage, sortBy);
-                }
-            }
+            catalogFirstPage.SortQuery = sortQuery;
+
+            //if (sortBy != SortBy.None)
+            //{
+            //    // This will sort results in the ascending order
+            //    catalogFirstPage = await SortSearchResultsAsync(Query, catalogFirstPage, sortBy);
+
+            //    if (sortDirection is SortDirection.Descending)
+            //    {
+            //        // The only way to sort results in the descending order is to send the same request again 
+            //        catalogFirstPage = await SortSearchResultsAsync(Query, catalogFirstPage, sortBy);
+            //    }
+            //}
 
             return catalogFirstPage;
         }
@@ -248,18 +256,7 @@ namespace Poushec.UpdateCatalogParser
                 throw new CatalogNoResultsException("No more search results available. This is a final page.");
             }
 
-            //var formData = new Dictionary<string, string>() 
-            //{
-            //    { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
-            //    { "__EVENTARGUMENT",        currentPage.EventArgument },
-            //    { "__VIEWSTATE",            currentPage.ViewState },
-            //    { "__VIEWSTATEGENERATOR",   currentPage.ViewStateGenerator },
-            //    { "__EVENTVALIDATION",      currentPage.EventValidation }
-            //};
-
-            //var requestContent = new FormUrlEncodedContent(formData); 
-
-            string nextPageUrl = $"{currentPage.SearchQueryUri}&p={currentPage.CurrentPage + 1}";
+            string nextPageUrl = $"{currentPage.SearchQueryUri}&p={currentPage.CurrentPage + 1}{currentPage.SortQuery}";
 
             HttpResponseMessage response = await _client.GetAsync(nextPageUrl, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -272,8 +269,7 @@ namespace Poushec.UpdateCatalogParser
                 return _catalogParser.ParseSearchResultsPage(HtmlDoc, currentPage.SearchQueryUri);
             }
         }
-        
-        
+
         /// <summary>
         /// Attempts to collect update details from Update Details Page and Download Page 
         /// </summary>
@@ -309,7 +305,7 @@ namespace Poushec.UpdateCatalogParser
 
             while (true)
             {
-                try 
+                try
                 {
                     detailsPage = await _catalogParser.LoadDetailsPageAsync(searchResult.UpdateID, cancellationToken);
                     break;
@@ -341,52 +337,12 @@ namespace Poushec.UpdateCatalogParser
 
             return updateBase;
         }
-        
-        private async Task<CatalogResponse> SortSearchResultsAsync(
-            string searchQuery, 
-            CatalogResponse unsortedResponse, 
-            SortBy sortBy, 
-            CancellationToken cancellationToken = default
-        )
-        {
-            string eventTarget = "ctl00$catalogBody$updateMatches$ctl02$";
-
-            switch (sortBy)
-            {
-                case SortBy.Title:           eventTarget += "titleHeaderLink"; break;
-                case SortBy.Products:        eventTarget += "productsHeaderLink"; break;
-                case SortBy.Classification:  eventTarget += "classHeaderLink"; break;
-                case SortBy.LastUpdated:     eventTarget += "dateHeaderLink"; break;
-                case SortBy.Version:         eventTarget += "versionHeaderLink"; break;
-                case SortBy.Size:            eventTarget += "sizeHeaderLink"; break;
-            }
-
-            var formData = new Dictionary<string, string>() 
-            {
-                { "__EVENTTARGET",          eventTarget },
-                { "__EVENTARGUMENT",        unsortedResponse.EventArgument },
-                { "__VIEWSTATE",            unsortedResponse.ViewState },
-                { "__VIEWSTATEGENERATOR",   unsortedResponse.ViewStateGenerator },
-                { "__EVENTVALIDATION",      unsortedResponse.EventValidation },
-                { "ctl00$searchTextBox",    searchQuery }
-            };
-
-            var requestContent = new FormUrlEncodedContent(formData); 
-
-            HttpResponseMessage response = await _client.PostAsync(unsortedResponse.SearchQueryUri, requestContent, cancellationToken);
-            response.EnsureSuccessStatusCode();
-            
-            var HtmlDoc = new HtmlDocument();
-            HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
-
-            return _catalogParser.ParseSearchResultsPage(HtmlDoc, unsortedResponse.SearchQueryUri);
-        }
 
         private async Task<CatalogResponse> InternalSendSearchQueryAsync(string requestUri, CancellationToken cancellationToken)
         {
             HttpResponseMessage response = await _client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
-            
+
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
@@ -396,6 +352,30 @@ namespace Poushec.UpdateCatalogParser
             }
 
             return _catalogParser.ParseSearchResultsPage(HtmlDoc, requestUri);
+        }
+
+        private string ConstructSortQuery(SortBy sortBy, SortDirection sortDirection)
+        {
+            if (sortBy == SortBy.None)
+            {
+                return string.Empty;
+            }
+
+            string columnName = string.Empty;
+
+            switch (sortBy)
+            {
+                case SortBy.Title: columnName = "Title"; break;
+                case SortBy.Products: columnName = "Products"; break;
+                case SortBy.Classification: columnName = "ClassificationComputed"; break;
+                case SortBy.LastUpdated: columnName = "DateComputed"; break;
+                case SortBy.Version: columnName = "DriverVerVersion"; break;
+                case SortBy.Size: columnName = "SizeInBytes"; break;
+            }
+
+            string sortDirectionQuery = sortDirection == SortDirection.Descending ? "desc" : "asc";
+
+            return $"&scol={columnName}&sdir={sortDirectionQuery}";
         }
     }
 }
