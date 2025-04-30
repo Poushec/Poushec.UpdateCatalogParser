@@ -131,7 +131,7 @@ namespace Poushec.UpdateCatalogParser
             
             List<CatalogSearchResult> searchResults = lastCatalogResponse.SearchResults;
             pageReloadAttemptsLeft = _pageReloadAttempts;
-            
+
             while (!lastCatalogResponse.FinalPage)
             {
                 if (pageReloadAttemptsLeft == 0)
@@ -248,24 +248,29 @@ namespace Poushec.UpdateCatalogParser
                 throw new CatalogNoResultsException("No more search results available. This is a final page.");
             }
 
-            var formData = new Dictionary<string, string>() 
-            {
-                { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
-                { "__EVENTARGUMENT",        currentPage.EventArgument },
-                { "__VIEWSTATE",            currentPage.ViewState },
-                { "__VIEWSTATEGENERATOR",   currentPage.ViewStateGenerator },
-                { "__EVENTVALIDATION",      currentPage.EventValidation }
-            };
+            //var formData = new Dictionary<string, string>() 
+            //{
+            //    { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
+            //    { "__EVENTARGUMENT",        currentPage.EventArgument },
+            //    { "__VIEWSTATE",            currentPage.ViewState },
+            //    { "__VIEWSTATEGENERATOR",   currentPage.ViewStateGenerator },
+            //    { "__EVENTVALIDATION",      currentPage.EventValidation }
+            //};
 
-            var requestContent = new FormUrlEncodedContent(formData); 
+            //var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(currentPage.SearchQueryUri, requestContent, cancellationToken);
+            string nextPageUrl = $"{currentPage.SearchQueryUri}&p={currentPage.CurrentPage + 1}";
+
+            HttpResponseMessage response = await _client.GetAsync(nextPageUrl, cancellationToken);
             response.EnsureSuccessStatusCode();
-            
-            var HtmlDoc = new HtmlDocument();
-            HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return _catalogParser.ParseSearchResultsPage(HtmlDoc, currentPage.SearchQueryUri);
+            using (var responseStream = await response.Content.ReadAsStreamAsync())
+            {
+                var HtmlDoc = new HtmlDocument();
+                HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
+
+                return _catalogParser.ParseSearchResultsPage(HtmlDoc, currentPage.SearchQueryUri);
+            }
         }
         
         

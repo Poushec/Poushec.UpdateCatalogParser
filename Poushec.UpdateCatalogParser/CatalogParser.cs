@@ -173,6 +173,7 @@ namespace Poushec.UpdateCatalogParser
 
             string resultsCountString = htmlDoc.GetElementbyId("ctl00_catalogBody_searchDuration").InnerText;
             int resultsCount = int.Parse(Regex.Match(resultsCountString, "(?<=of )\\d{1,4}").Value);
+            int currentPage = int.Parse(Regex.Match(resultsCountString, "(?<=page\\s)\\d{1,2}(?=\\sof\\s\\d{1,2})").Value);
 
             HtmlNode table = htmlDoc.GetElementbyId("ctl00_catalogBody_updateMatches");
 
@@ -185,7 +186,7 @@ namespace Poushec.UpdateCatalogParser
 
             List<CatalogSearchResult> searchResults = searchResultsRows
                 .Skip(1) // First row is always a headerRow
-                .Select(resultsRow => ParseResultsTableRow(resultsRow))
+                .Select(ParseResultsTableRow)
                 .ToList();
 
             return new CatalogResponse(
@@ -195,8 +196,7 @@ namespace Poushec.UpdateCatalogParser
                 eventValidation,
                 viewState,
                 viewStateGenerator,
-                finalPage,
-                resultsCount
+                currentPage
             );
         }
 
