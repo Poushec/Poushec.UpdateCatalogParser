@@ -1,14 +1,17 @@
+using System;
 using System.Collections.Generic;
 
 namespace Poushec.UpdateCatalogParser.Models
 {
     public class CatalogResponse
     {
-        internal string _searchQueryUri;
-        internal string _eventArgument;
-        internal string _eventValidation;
-        internal string _viewState;
-        internal string _viewStateGenerator;
+        internal string SearchQueryUri;
+        internal string EventArgument;
+        internal string EventValidation;
+        internal string ViewState;
+        internal string ViewStateGenerator;
+
+        internal int TotalPages => (int)Math.Ceiling((double)ResultsCount / 25);
 
         public readonly bool FinalPage;
         public List<CatalogSearchResult> SearchResults;
@@ -25,13 +28,13 @@ namespace Poushec.UpdateCatalogParser.Models
             int resultsCount
         ) 
         {
-            _searchQueryUri = searchQueryUri;
+            SearchQueryUri = searchQueryUri;
 
             this.SearchResults = searchResults;
-            this._eventArgument = eventArgument;
-            this._eventValidation = eventValidation;
-            this._viewState = viewState;
-            this._viewStateGenerator = viewStateGenerator;
+            this.EventArgument = eventArgument;
+            this.EventValidation = eventValidation;
+            this.ViewState = viewState;
+            this.ViewStateGenerator = viewStateGenerator;
             this.FinalPage = finalPage;
 
             this.ResultsCount = resultsCount;

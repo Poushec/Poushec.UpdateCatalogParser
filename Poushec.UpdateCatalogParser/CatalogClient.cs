@@ -251,21 +251,21 @@ namespace Poushec.UpdateCatalogParser
             var formData = new Dictionary<string, string>() 
             {
                 { "__EVENTTARGET",          "ctl00$catalogBody$nextPageLinkText" },
-                { "__EVENTARGUMENT",        currentPage._eventArgument },
-                { "__VIEWSTATE",            currentPage._viewState },
-                { "__VIEWSTATEGENERATOR",   currentPage._viewStateGenerator },
-                { "__EVENTVALIDATION",      currentPage._eventValidation }
+                { "__EVENTARGUMENT",        currentPage.EventArgument },
+                { "__VIEWSTATE",            currentPage.ViewState },
+                { "__VIEWSTATEGENERATOR",   currentPage.ViewStateGenerator },
+                { "__EVENTVALIDATION",      currentPage.EventValidation }
             };
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(currentPage._searchQueryUri, requestContent, cancellationToken);
+            HttpResponseMessage response = await _client.PostAsync(currentPage.SearchQueryUri, requestContent, cancellationToken);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return _catalogParser.ParseSearchResultsPage(HtmlDoc, currentPage._searchQueryUri);
+            return _catalogParser.ParseSearchResultsPage(HtmlDoc, currentPage.SearchQueryUri);
         }
         
         
@@ -359,22 +359,22 @@ namespace Poushec.UpdateCatalogParser
             var formData = new Dictionary<string, string>() 
             {
                 { "__EVENTTARGET",          eventTarget },
-                { "__EVENTARGUMENT",        unsortedResponse._eventArgument },
-                { "__VIEWSTATE",            unsortedResponse._viewState },
-                { "__VIEWSTATEGENERATOR",   unsortedResponse._viewStateGenerator },
-                { "__EVENTVALIDATION",      unsortedResponse._eventValidation },
+                { "__EVENTARGUMENT",        unsortedResponse.EventArgument },
+                { "__VIEWSTATE",            unsortedResponse.ViewState },
+                { "__VIEWSTATEGENERATOR",   unsortedResponse.ViewStateGenerator },
+                { "__EVENTVALIDATION",      unsortedResponse.EventValidation },
                 { "ctl00$searchTextBox",    searchQuery }
             };
 
             var requestContent = new FormUrlEncodedContent(formData); 
 
-            HttpResponseMessage response = await _client.PostAsync(unsortedResponse._searchQueryUri, requestContent, cancellationToken);
+            HttpResponseMessage response = await _client.PostAsync(unsortedResponse.SearchQueryUri, requestContent, cancellationToken);
             response.EnsureSuccessStatusCode();
             
             var HtmlDoc = new HtmlDocument();
             HtmlDoc.Load(await response.Content.ReadAsStreamAsync());
 
-            return _catalogParser.ParseSearchResultsPage(HtmlDoc, unsortedResponse._searchQueryUri);
+            return _catalogParser.ParseSearchResultsPage(HtmlDoc, unsortedResponse.SearchQueryUri);
         }
 
         private async Task<CatalogResponse> InternalSendSearchQueryAsync(string requestUri, CancellationToken cancellationToken)
