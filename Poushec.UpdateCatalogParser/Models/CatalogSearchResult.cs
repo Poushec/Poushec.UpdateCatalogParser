@@ -1,4 +1,3 @@
-using HtmlAgilityPack;
 using System;
 
 namespace Poushec.UpdateCatalogParser.Models
@@ -11,7 +10,7 @@ namespace Poushec.UpdateCatalogParser.Models
         public DateTime LastUpdated { get; set; }
         public string Version { get; set; }
         public string Size { get; set; }
-        public int SizeInBytes { get; set; }
+        public long SizeInBytes { get; set; }
         public string UpdateID { get; set; }
 
         internal CatalogSearchResult(
@@ -21,7 +20,7 @@ namespace Poushec.UpdateCatalogParser.Models
             DateTime lastUpdated, 
             string version, 
             string size, 
-            int sizeInBytes, 
+            long sizeInBytes, 
             string updateId) 
         {
             this.Title = title;

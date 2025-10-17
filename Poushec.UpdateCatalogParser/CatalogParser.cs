@@ -204,7 +204,7 @@ namespace Poushec.UpdateCatalogParser
             DateTime lastUpdated = DateTime.Parse(rowCells[4].InnerText.Trim(), _cultureInfo);
             string version = rowCells[5].InnerText.Trim();
             string size = rowCells[6].SelectNodes("span")[0].InnerText;
-            int sizeInBytes = int.Parse(rowCells[6].SelectNodes("span")[1].InnerHtml);
+            long sizeInBytes = long.Parse(rowCells[6].SelectNodes("span")[1].InnerHtml);
             string updateID = rowCells[7].SelectNodes("input")[0].Id;
 
             return new CatalogSearchResult(title, products, classification, lastUpdated, version, size, sizeInBytes, updateID);
