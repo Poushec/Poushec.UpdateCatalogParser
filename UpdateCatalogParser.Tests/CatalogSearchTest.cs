@@ -20,6 +20,17 @@ namespace UpdateCatalogParser.Tests
             Assert.Equal(49, searchResults.Count);
         }
 
+        [Trait("Catalog Search", "Large Update Files Test")]
+        [Theory(DisplayName = "Query that returns an update with filesize exiding the int limitation runs successfully")]
+        [InlineData("KB5060842")]
+        public async Task Send_Search_Query_For_Update_With_Large_Source_Runs_Successfully(string searchQuery)
+        {
+            var catalogClient = new CatalogClient();
+            List<CatalogSearchResult> searchResults = await catalogClient.SendSearchQueryAsync(searchQuery);
+
+            Assert.NotNull(searchResults);
+        }
+
         [Trait("Catalog Search", "Tests for Catalog Search queries")]
         [Theory(DisplayName = "GetFirstPageFromSearchQueryAsync Returns Correct Results Count ")]
         [InlineData("SQL Server 2012")] 
